@@ -89,8 +89,8 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				offset += numRead;
 			}
 			 vidFlag = false;
-			 fps = new Timer(50, new refreshFrame());
-			 fps.setInitialDelay(50);
+			 fps = new Timer(48, new refreshFrame());
+			 fps.setInitialDelay(48);
 
 			int ind = 0;
 			for(int y = 0; y < height; y++){
@@ -176,30 +176,6 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 //		frame.pack();
 //		frame.setVisible(true);
 
-
-	
-
-	public void playWAV(String filename){
-		// opens the inputStream
-		FileInputStream inputStream;
-		try {
-			inputStream = new FileInputStream(filename);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return;
-		}
-
-		// initializes the playSound Object
-		PlaySound playSound = new PlaySound(inputStream);
-
-		// plays the sound
-		try {
-			playSound.play();
-		} catch (PlayWaveException e) {
-			e.printStackTrace();
-			return;
-		}
-	}
 
 	@Override
 	public void mouseDragged(MouseEvent arg0) {
@@ -329,16 +305,6 @@ class refreshFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		if (state == 0) { // play
 			++currFrame;
-			if (currFrame == 720) {
-				currFrame = 0;
-				soundThread.interrupt();
-				dataLine.stop();
-				dataLine.flush();
-				dataLine.close();
-				soundThread = null;
-				soundThread = new Thread(new RefreshSound());
-				soundThread.start();
-			}
 			img = refreshFrame(currFrame);
 			videoOriginal(img);
 		} else if (state == 1) { // pause
@@ -382,13 +348,15 @@ class MyButton extends JButton {
 }
 public class RefreshSound implements Runnable {
 	public void run() {
-			try {
-				sis = new FileInputStream(soundFile);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+//			try {
+//				sis = new FileInputStream(soundFile);
+//			} catch (FileNotFoundException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 			long slen = soundFile.length();
+			System.out.println(slen);
+			
 			sbytes = new byte[(int) slen];
 
 			audioInputStream = null;
@@ -416,17 +384,17 @@ public class RefreshSound implements Runnable {
 
 		int readBytes = 0;
 		byte[] audioBuffer = new byte[EXTERNAL_BUFFER_SIZE];
-		try {
-			audioInputStream.skip((long) (currFrame*7357.0));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			audioInputStream.skip((long) (currFrame*7357.0));
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		try {
 		    while (readBytes != -1) {
 
 			readBytes = audioInputStream.read(audioBuffer, 0,
-				audioBuffer.length);
+					audioBuffer.length);
 
 				if (readBytes >= 0){
 			    dataLine.write(audioBuffer, 0, readBytes);
@@ -434,6 +402,10 @@ public class RefreshSound implements Runnable {
 		    }
 		} catch (IOException e1) {
 		    new PlayWaveException(e1);
+		}finally {
+		    // plays what's left and and closes the audioChannel
+		    dataLine.drain();
+		    dataLine.close();
 		}
 
 
