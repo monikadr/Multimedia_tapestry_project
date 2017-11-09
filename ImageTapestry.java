@@ -82,11 +82,16 @@ public class ImageTapestry {
 						ind2++;
 					}
 				}
-				if (Math.abs(sad) > 2139999999 || count == 0) {
+				//2139999999
+				//2039999999
+				//2119999999
+				//2123899999 disney
+				if (Math.abs(sad) > 2123899999) {
 					//System.out.println(count);
-					this.sceneIndex.add(count*originalWidth*originalHeight*3);
+
+						this.sceneIndex.add((count)*originalWidth*originalHeight*3);
+						ind1 = (count)*originalHeight*originalWidth*3;						
 					//System.out.println(sad);
-					ind1 = count*originalHeight*originalWidth*3;
 
 					for(int y = 0; y < originalHeight; y++){
 
