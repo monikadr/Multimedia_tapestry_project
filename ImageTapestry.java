@@ -56,6 +56,7 @@ public class ImageTapestry {
 				int ind1 = count*originalHeight*originalWidth*3;
 				int ind2 = (count+1)*originalHeight*originalWidth*3;
 				int sad = 0;
+				int numOfBlack = 0;
 
 				for(int y = 0; y < originalHeight; y++){
 
@@ -65,87 +66,36 @@ public class ImageTapestry {
 						int g1 = bytes[ind1+originalHeight*originalWidth] & 0xff;
 						int b1 = bytes[ind1+originalHeight*originalWidth*2] & 0xff; 
 
-				        int grayLevel1 = (r1 + g1 + b1) / 3;
-				        int gray1 = (grayLevel1 << 16) + (grayLevel1 << 8) + grayLevel1;
+				        //int grayLevel1 = (r1 + g1 + b1) / 3;
+				        //int gray1 = (grayLevel1 << 16) + (grayLevel1 << 8) + grayLevel1;
 						int pix1 = 0xff000000 | ((r1 & 0xff) << 16) | ((g1 & 0xff) << 8) | (b1 & 0xff);
-						
+						if (r1 == 0 && g1 == 0 && b1 == 0) {
+							numOfBlack++;
+						}
+
 						int r2 = bytes[ind2] & 0xff;
 						int g2 = bytes[ind2+originalHeight*originalWidth] & 0xff;
 						int b2 = bytes[ind2+originalHeight*originalWidth*2] & 0xff; 
 						int pix2 = 0xff000000 | ((r2 & 0xff) << 16) | ((g2 & 0xff) << 8) | (b2 & 0xff);
 
-				        int grayLevel2 = (r2 + g2 + b2) / 3;
-				        int gray2 = (grayLevel2 << 16) + (grayLevel2 << 8) + grayLevel2;
+				        //int grayLevel2 = (r2 + g2 + b2) / 3;
+				        //int gray2 = (grayLevel2 << 16) + (grayLevel2 << 8) + grayLevel2;
 				        sad += pix1 - pix2;
 				        //img.setRGB(x, y, pix1);
 						ind1++;
 						ind2++;
 					}
 				}
-				if (Math.abs(sad) > 2139999999 || count == 0) {
-					//System.out.println(count);
+
+				//To decide threshold use the following values: 2139999999, 2119999999, 2123899999 disney
+				//if there are scenes with black scene cuts use || numOfBlack > 32000
+
+				if (Math.abs(sad) > 2123899999) {
 					this.sceneIndex.add(count*originalWidth*originalHeight*3);
-					//System.out.println(sad);
-					ind1 = count*originalHeight*originalWidth*3;
-
-					for(int y = 0; y < originalHeight; y++){
-
-						for(int x = 0; x < originalWidth; x++){
-							
-							int r1 = bytes[ind1] & 0xff;
-							int g1 = bytes[ind1+originalHeight*originalWidth] & 0xff;
-							int b1 = bytes[ind1+originalHeight*originalWidth*2] & 0xff; 
-
-					        int grayLevel1 = (r1 + g1 + b1) / 3;
-					        int gray1 = (grayLevel1 << 16) + (grayLevel1 << 8) + grayLevel1;
-							int pix1 = 0xff000000 | ((r1 & 0xff) << 16) | ((g1 & 0xff) << 8) | (b1 & 0xff);
-							
-					        img.setRGB(x, y, pix1);
-							ind1++;
-						}
-					}
-
-					JPanel  panel = new JPanel ();
-				    panel.add (new JLabel (new ImageIcon (img)));
-				    
-				    JFrame frame = new JFrame("Display images");
-				    
-				    frame.getContentPane().add (panel);
-				    frame.pack();
-				    frame.setVisible(true);
-				    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);					
+					//this.displayFrame(count, bytes);					
 				}
-				// Use labels to display the images
 
-
-
-				// lbIm1 = new JLabel(new ImageIcon(img));
-
-				// GridBagConstraints c = new GridBagConstraints();
-				// c.fill = GridBagConstraints.HORIZONTAL;
-				// c.anchor = GridBagConstraints.CENTER;
-				// c.weightx = 0.5;
-				// c.gridx = 0;
-				// c.gridy = 0;
-				// frame.getContentPane().add(lbText1, c);
-
-				// c.fill = GridBagConstraints.HORIZONTAL;
-				// c.anchor = GridBagConstraints.CENTER;
-				// c.weightx = 0.5;
-				// c.gridx = 0;
-				// c.gridy = 1;
-				// frame.getContentPane().add(lbText2, c);
-
-				// c.fill = GridBagConstraints.HORIZONTAL;
-				// c.gridx = 0;
-				// c.gridy = 2;
-				// frame.getContentPane().add(lbIm1, c);
-
-				// frame.pack();
-				// frame.setVisible(true);
 				count++;
-				//TimeUnit.MILLISECONDS.sleep(50);
-				//System.out.println();
 			}
 			this.printIndexes();
 		} catch (FileNotFoundException e) {
@@ -156,8 +106,86 @@ public class ImageTapestry {
 	}
 
 
-	public void printIndexes() {
+	public void printIndexes() throws InterruptedException{
 		System.out.println("final number of scenes " + this.sceneIndex.size());
 		System.out.println(this.sceneIndex);
+	}
+
+	public void displayFrame(int count, byte[] bytes) {
+		ind1 = count*originalHeight*originalWidth*3;
+
+		for(int y = 0; y < originalHeight; y++){
+
+			for(int x = 0; x < originalWidth; x++){
+				
+				int r1 = bytes[ind1] & 0xff;
+				int g1 = bytes[ind1+originalHeight*originalWidth] & 0xff;
+				int b1 = bytes[ind1+originalHeight*originalWidth*2] & 0xff; 
+
+		        int grayLevel1 = (r1 + g1 + b1) / 3;
+		        int gray1 = (grayLevel1 << 16) + (grayLevel1 << 8) + grayLevel1;
+				int pix1 = 0xff000000 | ((r1 & 0xff) << 16) | ((g1 & 0xff) << 8) | (b1 & 0xff);
+				
+		        img.setRGB(x, y, pix1);
+				ind1++;
+			}
+		}
+
+		JPanel  panel = new JPanel ();
+	    panel.add (new JLabel (new ImageIcon (img)));
+	    
+	    JFrame frame = new JFrame("Display images");
+	    
+	    frame.getContentPane().add (panel);
+	    frame.pack();
+	    frame.setVisible(true);
+	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
+	}
+
+	public void showScenes(bytep[ bytes]) throws InterruptedException {
+		int count = 0;
+		int count2 = 0;
+		int ind1 = 0, ind2 = 0;
+		while (count < this.sceneIndex.size()-1) {
+			if (count == 0) {
+				ind1 = 0;
+				ind2 = this.sceneIndex.get(count);
+			}
+			else {
+				ind1 = this.sceneIndex.get(count);
+				ind2 = this.sceneIndex.get(count+1);
+			}
+
+			while (ind1 < ind2) {
+				ind1 = count2*originalHeight*originalWidth*3;
+				count2++;
+				for(int y = 0; y < originalHeight; y++){
+
+					for(int x = 0; x < originalWidth; x++){
+						
+						int r1 = bytes[ind1] & 0xff;
+						int g1 = bytes[ind1+originalHeight*originalWidth] & 0xff;
+						int b1 = bytes[ind1+originalHeight*originalWidth*2] & 0xff; 
+						int pix1 = 0xff000000 | ((r1 & 0xff) << 16) | ((g1 & 0xff) << 8) | (b1 & 0xff);
+						
+				        img.setRGB(x, y, pix1);
+						ind1++;
+					}
+				}
+				JPanel  panel = new JPanel ();
+
+			    panel.add (new JLabel (new ImageIcon (img)));
+			    
+			    JFrame frame = new JFrame("Display images");
+			    
+			    frame.getContentPane().add (panel);
+			    frame.pack();
+			    frame.setVisible(true);
+			    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);				
+			}
+		
+			count++;
+			TimeUnit.SECONDS.sleep(5);
+		}
 	}
 }
