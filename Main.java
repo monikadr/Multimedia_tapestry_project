@@ -1,10 +1,12 @@
 public class Main {
 
 	public static void main (String[] args) throws InterruptedException {
+		int nFrames=6000;
+		int nBytes = 304128;
 		
-		int[] byteIndicies = new int[720];
-		for (int b = 0; b < 720; ++b) {
-			byteIndicies[b] = b * 304128;
+		int[] byteIndicies = new int[nFrames];
+		for (int b = 0; b < nFrames; ++b) {
+			byteIndicies[b] = b * nBytes;
 		}
 		String videoFileName = args[0];
 		String audioFileName = args[1];
