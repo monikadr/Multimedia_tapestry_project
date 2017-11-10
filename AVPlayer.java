@@ -242,7 +242,6 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		   panel.setLayout(new BorderLayout());
 		   JLabel label = new JLabel(new ImageIcon(img));
 		   label.setPreferredSize(new Dimension(img.getWidth()+100, img.getHeight()));
-		   //original.add(label, BorderLayout.CENTER);
 		   panel.add(label, BorderLayout.CENTER);
 		   panel.revalidate();
 		   panel.repaint();
@@ -348,12 +347,13 @@ class MyButton extends JButton {
 }
 public class RefreshSound implements Runnable {
 	public void run() {
-//			try {
-//				sis = new FileInputStream(soundFile);
-//			} catch (FileNotFoundException e) {
+		InputStream sis = null;
+			try {
+				sis = new FileInputStream(soundFile);
+			} catch (FileNotFoundException e) {
 //				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+				e.printStackTrace();
+			}
 			long slen = soundFile.length();
 			System.out.println(slen);
 			
