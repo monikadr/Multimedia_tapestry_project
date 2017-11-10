@@ -52,9 +52,9 @@ public class ImageTapestry {
 			JLabel lbText2 = new JLabel("Audio: ");
 			lbText2.setHorizontalAlignment(SwingConstants.LEFT);		
 
-			while (count < totalFrames-1) {
+			while (count < totalFrames-2) {
 				int ind1 = count*originalHeight*originalWidth*3;
-				int ind2 = (count+1)*originalHeight*originalWidth*3;
+				int ind2 = (count+2)*originalHeight*originalWidth*3;
 				int sad = 0;
 				int numOfBlack = 0;
 
@@ -92,7 +92,7 @@ public class ImageTapestry {
 
 				if (Math.abs(sad) > 2123899999) {
 					this.sceneIndex.add(count*originalWidth*originalHeight*3);
-					//this.displayFrame(count, bytes);					
+					this.displayFrame(count, bytes);					
 				}
 
 				count++;
@@ -112,7 +112,7 @@ public class ImageTapestry {
 	}
 
 	public void displayFrame(int count, byte[] bytes) {
-		ind1 = count*originalHeight*originalWidth*3;
+		int ind1 = count*originalHeight*originalWidth*3;
 
 		for(int y = 0; y < originalHeight; y++){
 
@@ -142,7 +142,7 @@ public class ImageTapestry {
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
 	}
 
-	public void showScenes(bytep[ bytes]) throws InterruptedException {
+	public void showScenes(byte[] bytes) throws InterruptedException {
 		int count = 0;
 		int count2 = 0;
 		int ind1 = 0, ind2 = 0;
@@ -188,4 +188,7 @@ public class ImageTapestry {
 			TimeUnit.SECONDS.sleep(5);
 		}
 	}
+
+
+
 }
