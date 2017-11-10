@@ -1,7 +1,7 @@
 public class Main {
 
 	public static void main (String[] args) throws InterruptedException {
-		int nFrames=6000;
+		int nFrames = 6000;
 		int nBytes = 304128;
 		
 		int[] byteIndicies = new int[nFrames];
