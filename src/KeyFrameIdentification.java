@@ -4,32 +4,42 @@ import java.io.*;
 import javax.swing.*;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.concurrent.TimeUnit;
 import java.util.*;
 import java.io.*;
+import javax.imageio.ImageIO;
 
-public class ImageTapestry {
+public class KeyFrameIdentification {
 	
 	private ArrayList<Integer> sceneIndex;
 	private ArrayList<Integer> colorHistogramDifferences;
 	private static int originalHeight;
 	private static int originalWidth;
 	private static long totalFrames;
+	private static int threshold;
 	JFrame frame;
 	JLabel lbIm1;
 	JLabel lbIm2;
 	BufferedImage img;
 
-	public ImageTapestry(String fileName) throws InterruptedException{
-		sceneIndex = new ArrayList<Integer>();
-		colorHistogramDifferences = new ArrayList<Integer>();
-		originalWidth = 352;
-		originalHeight = 288;
+	public KeyFrameIdentification (String fileName, int threshold) throws IOException {
+		this.sceneIndex = new ArrayList<Integer>();
+		this.colorHistogramDifferences = new ArrayList<Integer>();
+		this.originalWidth = 352;
+		this.originalHeight = 288;
+		this.threshold = threshold;
 		this.sceneIdentificationUsingColorHistogram(fileName);
 		//this.sceneIdentificationUsingSAD(fileName);
 	}
 
-	public void sceneIdentificationUsingSAD(String fileName) throws InterruptedException {
+	public ArrayList<Integer> getSceneIndex() {
+		return this.sceneIndex;
+	}
+
+	public int getThreshold() {
+		return this.threshold;
+	}
+
+	public void sceneIdentificationUsingSAD(String fileName) {
 		img = new BufferedImage(originalWidth, originalHeight, BufferedImage.TYPE_INT_RGB);
 
 		try {
@@ -111,7 +121,7 @@ public class ImageTapestry {
 
 				count++;
 			}
-			this.decideKeyFrames();
+			this.decideKeyFrames(bytes);
 			this.printIndexes();
 
 		} catch (FileNotFoundException e) {
@@ -121,7 +131,7 @@ public class ImageTapestry {
 		}
 	}
 
-	public void sceneIdentificationUsingColorHistogram(String fileName) throws InterruptedException {
+	public void sceneIdentificationUsingColorHistogram(String fileName) throws IOException {
 		img = new BufferedImage(originalWidth, originalHeight, BufferedImage.TYPE_INT_RGB);
 
 		try {
@@ -163,12 +173,13 @@ public class ImageTapestry {
 						int g1 = bytes[ind1+originalHeight*originalWidth] & 0xff;
 						int b1 = bytes[ind1+originalHeight*originalWidth*2] & 0xff; 
 						color1[r1 / 64][g1 / 64][b1 / 64]++;
+						int pix = 0xff000000 | ((r1 & 0xff) << 16) | ((g1 & 0xff) << 8) | (b1 & 0xff);
 
 						int r2 = bytes[ind2] & 0xff;
 						int g2 = bytes[ind2+originalHeight*originalWidth] & 0xff;
 						int b2 = bytes[ind2+originalHeight*originalWidth*2] & 0xff; 
 						color2[r2 / 64][g2 / 64][b2 / 64]++;
-
+						img.setRGB(x,y,pix);
 						ind1++;
 						ind2++;
 					}
@@ -186,7 +197,7 @@ public class ImageTapestry {
 
 				//decide threshold values
 
-				if (Math.abs(sad) > 89000) {
+				if (Math.abs(sad) > this.threshold) {
 					if (this.sceneIndex.size() != 0) {
 						int prevIndex = this.sceneIndex.get(this.sceneIndex.size()-1);
 						int currIndex = count*originalWidth*originalHeight*3;
@@ -194,19 +205,16 @@ public class ImageTapestry {
 						double currTime = (double)currIndex/((double)originalHeight*(double)originalHeight*(double)3*(double)20*(double)60);
 						if (currTime > prevTime + 0.2) {
 							this.sceneIndex.add(currIndex);
-							this.displayFrame(count, bytes);
 						}
 					}
 					else {
 						this.sceneIndex.add(count*originalWidth*originalHeight*3);
-						this.displayFrame(count, bytes);
 					}
 				}
 
 				count++;
 			}
-			this.decideKeyFrames();
-			this.printIndexes();
+			this.decideKeyFrames(bytes);
 			//this.setKeyFrames(bytes);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -215,90 +223,91 @@ public class ImageTapestry {
 		}
 	}
 
-	public void decideKeyFrames() {
-		double mean = 0;
-		int max = 0;
-		for (int i = 0; i < this.colorHistogramDifferences.size(); i++) {
-			if (this.colorHistogramDifferences.get(i) > max) {
-				max = this.colorHistogramDifferences.get(i);
-			}
-			mean += (double)this.colorHistogramDifferences.get(i);
-		}
-		mean = mean/((double)totalFrames-1);
-	    double temp = 0;
+	public void decideKeyFrames(byte[] bytes) throws IOException {
+		int count = 0;
+		while (count < this.sceneIndex.size()) {
+			int numberOfBlack = 0;
+			int ind1 = this.sceneIndex.get(count);
 
-	    for (int i = 0; i < this.colorHistogramDifferences.size(); i++)
-	    {
-	        int val = this.colorHistogramDifferences.get(i);
-	        double squrDiffToMean = Math.pow(val - mean, 2);
-	        temp += squrDiffToMean;
-	    }
+			for(int y = 0; y < originalHeight; y++){
 
-	    double meanOfDiffs = (double) temp / (double) (this.colorHistogramDifferences.size());
-	    double stdeviation = Math.sqrt(meanOfDiffs);
-	    System.out.println("mean is " + mean + " sdt " + stdeviation);
-	    System.out.println(mean-stdeviation);
-	    System.out.println(mean+stdeviation);
-	    int count = 0;
-		for (int i = 0; i < this.colorHistogramDifferences.size(); i++) {
-			if (this.colorHistogramDifferences.get(i) > mean+stdeviation) {
-				count++;
+				for(int x = 0; x < originalWidth; x++){
+					
+					int r1 = bytes[ind1] & 0xff;
+					int g1 = bytes[ind1+originalHeight*originalWidth] & 0xff;
+					int b1 = bytes[ind1+originalHeight*originalWidth*2] & 0xff; 
+
+			        int grayLevel1 = (r1 + g1 + b1) / 3;
+			        if (grayLevel1 == 0) {
+			        	numberOfBlack++;
+			        }
+					ind1++;
+				}
 			}
+			if (numberOfBlack > 100000) {
+				int black = numberOfBlack;
+				int count2 = 0;
+				while (black > 101000) {
+					black = 0;
+					count2++;
+					int ind = this.sceneIndex.get(count) + count2*originalWidth*originalHeight*3;
+					for(int y = 0; y < originalHeight; y++){
+
+						for(int x = 0; x < originalWidth; x++){
+							
+							int r1 = bytes[ind] & 0xff;
+							int g1 = bytes[ind+originalHeight*originalWidth] & 0xff;
+							int b1 = bytes[ind+originalHeight*originalWidth*2] & 0xff; 
+
+					        int grayLevel1 = (r1 + g1 + b1) / 3;
+					        if (grayLevel1 == 0) {
+					        	black++;
+					        }
+							ind++;
+						}
+					}
+				}
+				int newIndex = this.sceneIndex.get(count) + count2*originalHeight*originalHeight*3;
+				this.sceneIndex.remove(count);
+				this.sceneIndex.add(count,newIndex);
+
+			}
+			count++;
 		}
-		System.out.println(count);
+
+		this.outputKeyFrames(bytes);
 	}
 
-	// public void setKeyFrames(byte[] bytes) throws InterruptedException {
-	// 	int a = 0;
-	// 	for (int i = 0; i < this.sceneIndex.size(); i++) {
-	// 		a = this.sceneIndex.get(i);
-	// 		a = a + 20*originalWidth*originalHeight*3;
-	// 		if (a < bytes.length)
-	// 			this.keyframeIndex.add(a);
-	// 		else 
-	// 			this.keyframeIndex.add(this.sceneIndex.get(i));
-	// 		this.displayFrameWithIndex(a,bytes);
-	// 	}
-	// 	this.printKeyFrames();
-	// }
 
-	// public void printKeyFrames() throws InterruptedException{
-	// 	System.out.println("final number of keyframes " + this.sceneIndex.size());
-	// 	System.out.println(this.keyframeIndex);
-	// }	
-
-	public void printIndexes() throws InterruptedException{
+	public void printIndexes() throws IOException {
 		System.out.println("final number of scenes " + this.sceneIndex.size());
 		System.out.println(this.sceneIndex);
 	}
 
-	public void displayFrameWithIndex(int ind1, byte[] bytes) {
-		for(int y = 0; y < originalHeight; y++){
+	public void outputKeyFrames(byte[] bytes) throws IOException {
+		int count = 0;
+		while (count < this.sceneIndex.size()) {
+			int ind1 = this.sceneIndex.get(count);
+			for(int y = 0; y < originalHeight; y++){
 
-			for(int x = 0; x < originalWidth; x++){
-				
-				int r1 = bytes[ind1] & 0xff;
-				int g1 = bytes[ind1+originalHeight*originalWidth] & 0xff;
-				int b1 = bytes[ind1+originalHeight*originalWidth*2] & 0xff; 
+				for(int x = 0; x < originalWidth; x++){
+					
+					int r1 = bytes[ind1] & 0xff;
+					int g1 = bytes[ind1+originalHeight*originalWidth] & 0xff;
+					int b1 = bytes[ind1+originalHeight*originalWidth*2] & 0xff; 
 
-		        int grayLevel1 = (r1 + g1 + b1) / 3;
-		        int gray1 = (grayLevel1 << 16) + (grayLevel1 << 8) + grayLevel1;
-				int pix1 = 0xff000000 | ((r1 & 0xff) << 16) | ((g1 & 0xff) << 8) | (b1 & 0xff);
-				
-		        img.setRGB(x, y, pix1);
-				ind1++;
+					int pix1 = 0xff000000 | ((r1 & 0xff) << 16) | ((g1 & 0xff) << 8) | (b1 & 0xff);
+					
+			        img.setRGB(x, y, pix1);
+					ind1++;
+				}
 			}
-		}
-
-		JPanel  panel = new JPanel ();
-	    panel.add (new JLabel (new ImageIcon (img)));
-	    
-	    JFrame frame = new JFrame("Display images");
-	    
-	    frame.getContentPane().add (panel);
-	    frame.pack();
-	    frame.setVisible(true);
-	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
+			String fileNam = "keyframes/" + this.threshold + "_" + count + ".png";
+			File outputfile = new File(fileNam);
+			ImageIO.write(img, "png", outputfile);		
+			count++;
+		} 
+	
 	}	
 
 	public void displayFrame(int count, byte[] bytes) {
@@ -332,7 +341,7 @@ public class ImageTapestry {
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
 	}
 
-	public void showScenes(byte[] bytes) throws InterruptedException {
+	public void showScenes(byte[] bytes) {
 		int count = 0;
 		int count2 = 0;
 		int ind1 = 0, ind2 = 0;
@@ -375,7 +384,6 @@ public class ImageTapestry {
 			}
 		
 			count++;
-			TimeUnit.SECONDS.sleep(5);
 		}
 	}
 
