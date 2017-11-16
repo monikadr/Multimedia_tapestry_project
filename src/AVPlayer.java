@@ -1,6 +1,4 @@
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -11,14 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
-import javax.xml.stream.*;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import javax.xml.xpath.XPathConstants;
-
-import javax.management.modelmbean.XMLParseException;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -28,99 +20,76 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.sound.sampled.DataLine.Info;
 import javax.swing.*;
 
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 public class AVPlayer implements MouseListener, MouseMotionListener {
 
+	// variables to read rgb file
+	int ind = 0;
+	int offset = 0;
+	int numRead = 0;
+	// variables to create UI
 	JFrame frame;
-	JLabel lbIm1;
-	JLabel lbIm2;
-	JPanel panel, imagesPanel,sliderPanel,buttonPanel,tapestry;
+	JPanel panel, sliderPanel,buttonPanel,tapestry;
+	public static JSlider slider;
 	int width = 352;
 	int height = 288;
-	private final int EXTERNAL_BUFFER_SIZE = 524288;
-
 	BufferedImage img;
+	// variable that holds the start of each frame index in video
 	public int[] byteIndicies;
-	Timer fps;
+	// number of frames per second
+	public int fps = 20;
+	// total number of frames in the video file
+	double Frames;
 	public static File soundFile, file;
 	public static InputStream is, sis;
+	// length of audio and video file
 	public static long len, slen;
+	// if doing fast forward like clicking on time slider
+	public static boolean fastForward = false;
 	public static byte[] bytes, sbytes;
-	public static AudioInputStream audioInputStream;
-	public static boolean vidFlag;
-	public static int state, startFrame;
-	public static int currFrame = 0;
-	public static Thread soundThread;
-	public static SourceDataLine dataLine;
+	// to keep track of video state = 0 -> playing, state=1 -> pause, state=2 -> stop
+	public static int state;
+	// to keep track of playing frame number 
+	public static int startFrame, currFrame = 0;
+	// threads for audio and video 
+	public static Thread soundThread,videoThread;
+	// to keep track if audio is already playing
 	public static boolean isAlreadyPlaying = false;
-	public static JSlider slider;
+	// to keep track if audio 
+	public boolean isPause = false;
+	
+	public static String audioFileName;
+	public static String videoFileName;
+	PlaySound playSound = new PlaySound();
 
-	public AVPlayer(String video, String audio, int[] byteIndicies) {
+	public AVPlayer(String video, String audio, int[] byteIndicies,double f) {
 
+		// initialization for variables
 		this.byteIndicies = byteIndicies;
+		this.Frames = f;
+		this.audioFileName = audio;
+		this.videoFileName = video;
 
-		img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-		try {
-			file = new File(video);
-			is = new FileInputStream(file);
-			soundFile = new File(audio);
-			sis = new FileInputStream(soundFile);
-			len = file.length();
-			slen = soundFile.length();
-
-			bytes = new byte[(int) len];
-			sbytes = new byte[(int) slen];
-			audioInputStream = null;
-			try {
-				audioInputStream = AudioSystem.getAudioInputStream(soundFile);
-			} catch (UnsupportedAudioFileException e1) {
-				new PlayWaveException(e1);
-			} catch (IOException e1) {
-				new PlayWaveException(e1);
-			}
-
-			int offset = 0;
-			int numRead = 0;
-			while (offset < bytes.length && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
-				offset += numRead;
-			}
-			vidFlag = false;
-			fps = new Timer(46, new refreshFrame());
-			fps.setInitialDelay(46);
-
-			int ind = 0;
-			for (int y = 0; y < height; y++) {
-
-				for (int x = 0; x < width; x++) {
-
-					byte a = 0;
-					byte r = bytes[ind];
-					byte g = bytes[ind + height * width];
-					byte b = bytes[ind + height * width * 2];
-
-					int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
-					img.setRGB(x, y, pix);
-					ind++;
-				}
-			}
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		// setting slider, stop, pause, play buttons
+		// setting slider, stop, pause, play buttons - UI build
 		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		panel = new JPanel();
+		
+		//load video file
+		try {
+			file = new File(video);
+			is = new FileInputStream(file);			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		len = file.length();
+		bytes = new byte[(int) len];
+	
+		// get start image of the video and display
+		img = refreshFrame(0);
 		showImage(frame.getContentPane());
 
-		// adding slider to buttom
+		// adding slider after video screen
 		sliderPanel = new JPanel();
 		sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.Y_AXIS));
 		sliderPanel.add(Box.createRigidArea(new Dimension(0, 20))); // Spacing
@@ -134,61 +103,68 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		slider.setPreferredSize(new Dimension(width, 50));
 		startFrame = currFrame;
 
+		sliderPanel.add(slider);
 		slider.addMouseListener(new MouseListener() {
 
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mouseClicked(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-
+				
 			}
 
 			@Override
-			public void mouseEntered(MouseEvent e) {
+			public void mouseEntered(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-
+				
 			}
 
 			@Override
-			public void mouseExited(MouseEvent e) {
+			public void mouseExited(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-
+				
 			}
 
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
 				JSlider slider = (JSlider) e.getSource();
-
+				fastForward = true;
 				currFrame = (int) ((e.getX() * 1.85 * 9) + startFrame);
-				img = refreshFrame(currFrame);
-				videoOriginal(img);
+
+				slider.setValue(currFrame);
+				isAlreadyPlaying = false;
+			
+				videoThread.interrupt();
+				soundThread.interrupt();				
+				playSound.stop();
 				try {
-					audioInputStream.close();
-				} catch (IOException e1) {
+					videoThread.sleep(10);
+					soundThread.sleep(10);
+				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				dataLine.stop();
-				dataLine.flush();
-				dataLine.close();
-				soundThread = new Thread(new PlaySound());
-				fps.start();
-				soundThread.start();
-				slider.setValue(currFrame);
+				soundThread = null;
+//				soundThread = new Thread(new sound());
+				videoThread = null;
+//				videoThread = new Thread(new video());
+				playSound.jump(currFrame);
+				
+			
+				playback();
+				
+				
 			}
 
 			@Override
-			public void mouseReleased(MouseEvent e) {
+			public void mouseReleased(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-
+				
 			}
-
+		
 		});
-
-		sliderPanel.add(slider);
-
-		// adding button
-
+		
+		// adding button after slider
 		buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 		MyButton playButton = new MyButton("Play");
@@ -202,51 +178,9 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		buttonPanel.add(Box.createRigidArea(new Dimension(0, 50)));
 		sliderPanel.add(buttonPanel);
 
-		// adding tapestry image
-
-		tapestry = new JPanel();
-		// to do adding image to panel
+		// need to add tapestry panel 
 		
-		tapestry.addMouseListener(new MouseListener() {
-
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-				int x = e.getX();
-				int y = e.getY();
-				// get the clickedFrame
-				
-			}
-
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-		});
-		sliderPanel.add(tapestry);
-
-
-		//adding sliderPanel to frame
+		//adding whole panel to frame
 		frame.getContentPane().add(sliderPanel, BorderLayout.SOUTH);
 		frame.pack();
 		frame.setVisible(true);
@@ -293,29 +227,103 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	public void mouseReleased(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 	}
-	
-	
-	public BufferedImage refreshFrame(int currFrame) {
-		// get new picture
-		int ind = byteIndicies[currFrame];
-		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				byte a = 0;
-				byte r = bytes[ind];
-				byte g = bytes[ind + height * width];
-				byte b = bytes[ind + height * width * 2];
 
-				int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
-				img.setRGB(x, y, pix);
-				ind++;
+	// button class for displaying button and taking click on button
+	class MyButton extends JButton {
+		MyButton(String label) {
+			setFont(new Font("Helvetica", Font.BOLD, 10));
+			setText(label);
+			addMouseListener(new MouseAdapter() {
+				public void mousePressed(MouseEvent e) {
+					buttonPressed(getText());
+				}
+			});
+		}
+	}
+
+	// playing video and audio based on the state or button press
+	public void buttonPressed(String name) {
+		if (name.equals("Play") && isAlreadyPlaying == false) { // Play			
+			isAlreadyPlaying = true;
+			state = 0;
+			playback();
+		} else if (name.equals("Play") && state == 1) { // resume
+			isAlreadyPlaying = true;
+			state = 0;
+			isPause = false;
+			playSound.resume();
+			videoThread.interrupt();
+			soundThread.interrupt();
+		} else if (name.equals("Pause")) { // Pause
+			state = 1;
+			isPause = true;
+			videoThread.interrupt();
+			soundThread.interrupt();
+			playSound.pause();
+		} else if (name.equals("Stop")) { // Stop
+			state = 2;
+			currFrame = 0;
+			isAlreadyPlaying = false;
+			soundThread.interrupt();
+			videoThread.interrupt();
+			playSound.stop();
+		} 
+	}
+	
+	// start the video and audio when play button is clicked
+	public void playback(){
+		try {
+			playSound.load(audioFileName,currFrame);
+		} catch (UnsupportedAudioFileException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		} catch (LineUnavailableException e1) {
+			e1.printStackTrace();
+		}		
+		fastForward = false;
+		soundThread = null;
+		soundThread = new Thread(new sound());
+		soundThread.start();
+		videoThread = null;
+		videoThread = new Thread(new video());
+		videoThread.start();
+	}
+	
+	// get new frame of video based on frame number
+	public BufferedImage refreshFrame(int frame_no) {
+		
+			ind = byteIndicies[frame_no];
+		
+		img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		try {
+			
+			while (offset < bytes.length && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+				offset += numRead;
 			}
+			
+			for(int y = 0; y < height; y++){
+				for(int x = 0; x < width; x++){
+					byte r = bytes[ind];
+					byte g = bytes[ind+height*width];
+					byte b = bytes[ind+height*width*2]; 
+
+					int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+					img.setRGB(x,y,pix);
+					ind++;
+				} 
+			}
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
 		}
 		return img;
 	}
 
+	// to show the start frame of the video
 	public void showImage(Container pane) {
-
+		// show the initial panel and start of video
+		currFrame = 0;
 		panel.removeAll();
 		panel.setLayout(new BorderLayout());
 		JLabel label = new JLabel(new ImageIcon(img));
@@ -327,8 +335,10 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 	}
 
+	// repaint the video after every frame
 	public void videoOriginal(BufferedImage img) {
 		// update image
+		currFrame++;
 		panel.removeAll();
 		panel.setLayout(new BorderLayout());
 		JLabel label = new JLabel(new ImageIcon(img));
@@ -338,157 +348,51 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		panel.repaint();
 		slider.setValue(currFrame);
 	}
-
-	public void buttonPressed(String name) {
-		if (name.equals("Play") && isAlreadyPlaying == false) { // Play
-			state = 0;
-			soundThread = null;
-			soundThread = new Thread(new PlaySound());
-			fps.start();
-			soundThread.start();
-			isAlreadyPlaying = true;
-		} else if (name.equals("Play") && state == 1) { // Play after pause
-			// TO DO : to continue playing from where it was stopped
-			state = 0;
-			soundThread = null;
-			soundThread = new Thread(new PlaySound());
-			fps.start();
-			soundThread.start();
-			isAlreadyPlaying = true;
-		} else if (name.equals("Pause")) { // Pause
-			state = 1;
-			fps.stop();
+	
+	// start playing sound thread
+	public class sound implements Runnable {
+		public void run() {
 			try {
-				audioInputStream.close();
+				playSound.play();
 			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			soundThread.interrupt();
-			dataLine.stop();
-			dataLine.flush();
-			dataLine.close();
-		} else if (name.equals("Stop")) { // Stop
-			state = 2;
-			currFrame = 0;
-			BufferedImage f = refreshFrame(currFrame);
-			videoOriginal(f);
-			isAlreadyPlaying = false;
-			soundThread.interrupt();
-			dataLine.stop();
-			dataLine.flush();
-			dataLine.close();
-		} else if (name.equals("Close")) { // close
-			System.exit(0);
 		}
 	}
-
-	class refreshFrame implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			if (state == 0) { // play
-				++currFrame;
-				if (currFrame >= byteIndicies.length-1) {
-					currFrame = 0;
-					soundThread.interrupt();
-					dataLine.stop();
-					dataLine.flush();
-					dataLine.close();
-					soundThread = null;
-					fps.stop();
-				}
+	
+	// start playing video thread
+	public class video implements Runnable{
+		public void run(){
+			img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			double spf = playSound.getSampleRate()/fps;
+			int j=0;
+			while((j < Math.round(playSound.getPosition())/spf) && fastForward == false){
 				img = refreshFrame(currFrame);
 				videoOriginal(img);
-			} else if (state == 1) { // pause
-				BufferedImage f = refreshFrame(currFrame);
-				videoOriginal(f);
-				fps.stop();
-			} else if (state == 2) { // stop
-				BufferedImage f = refreshFrame(currFrame);
-				videoOriginal(f);
-				fps.stop();
+				j++;
 			}
-		}
-	}
+			while(j > Math.round(playSound.getPosition()/spf) &&  fastForward == false) {
+				// Do Nothing : this to slow down the video number of frames per sec
+			}
 
-	class MyButton extends JButton {
-		MyButton(String label) {
-			setFont(new Font("Helvetica", Font.BOLD, 10));
-			setText(label);
-			addMouseListener(new MouseAdapter() {
-				public void mousePressed(MouseEvent e) {
-					buttonPressed(getText());
+			for(int i = j; i < Frames&&  fastForward == false; i++) {
+				// Video ahead of audio, wait for audio to catch up
+				
+				while(i > Math.round(playSound.getPosition()/spf) &&  fastForward == false) {
+					// Do Nothing
 				}
-			});
-		}
-
-		MyButton(String label, ImageIcon icon) {
-			Image img = icon.getImage();
-			Image scaleimg = img.getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-			setIcon(new ImageIcon(scaleimg));
-			setName(label);
-			addMouseListener(new MouseAdapter() {
-				public void mousePressed(MouseEvent e) {
-					buttonPressed(getName());
+				
+				while(i < Math.round(playSound.getPosition()/spf)&&  fastForward == false) {
+					img = refreshFrame(currFrame);
+					videoOriginal(img);
+					i++;
 				}
-			});
-		}
-	}
-
-	public class PlaySound implements Runnable {
-		public void run() {
-			InputStream sis = null;
-			try {
-				sis = new FileInputStream(soundFile);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
+				
+				img = refreshFrame(currFrame);
+				videoOriginal(img);
+				System.gc();
 			}
-			long slen = soundFile.length();
-			sbytes = new byte[(int) slen];
-
-			audioInputStream = null;
-			try {
-				audioInputStream = AudioSystem.getAudioInputStream(soundFile);
-			} catch (UnsupportedAudioFileException e1) {
-				new PlayWaveException(e1);
-			} catch (IOException e1) {
-				new PlayWaveException(e1);
-			}
-			AudioFormat audioFormat = audioInputStream.getFormat();
-			Info info = new Info(SourceDataLine.class, audioFormat);
-
-			// opens the audio channel
-
-			dataLine = null;
-			try {
-				dataLine = (SourceDataLine) AudioSystem.getLine(info);
-				dataLine.open(audioFormat, EXTERNAL_BUFFER_SIZE);
-			} catch (LineUnavailableException e1) {
-				new PlayWaveException(e1);
-			}
-
-			dataLine.start();
-
-			int readBytes = 0;
-			byte[] audioBuffer = new byte[EXTERNAL_BUFFER_SIZE];
-
-			try {
-				int val = currFrame * 4410;
-				audioInputStream.skip((long) val);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			try {
-				while (readBytes != -1) {
-
-					readBytes = audioInputStream.read(audioBuffer, 0, audioBuffer.length);
-
-					if (readBytes >= 0) {
-						dataLine.write(audioBuffer, 0, readBytes);
-					}
-				}
-			} catch (IOException e1) {
-				new PlayWaveException(e1);
-			}
-
 		}
 	}
 }

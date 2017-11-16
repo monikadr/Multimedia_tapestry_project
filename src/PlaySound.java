@@ -1,82 +1,187 @@
-//package org.wikijava.sound.playWave;
 
-import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.sound.sampled.DataLine.Info;
 
-/**
- * 
- * <Replace this with a short description of the class.>
- * 
- * @author Giulio
- */
-public class PlaySound {
+public class PlaySound implements LineListener {
+//	private static final int SECONDS_IN_HOUR = 60 * 60;
+//	private static final int SECONDS_IN_MINUTE = 60;
+	int frames;
 
-    private InputStream waveStream;
+	/**
+	 * this flag indicates whether the playback completes or not.
+	 */
+	private boolean playCompleted;
 
-    private final int EXTERNAL_BUFFER_SIZE = 524288; // 128Kb
+	/**
+	 * this flag indicates whether the playback is stopped or not.
+	 */
+	private boolean isStopped;
 
-    /**
-     * CONSTRUCTOR
-     */
-    public PlaySound(InputStream waveStream) {
-	//this.waveStream = waveStream;
-	this.waveStream = new BufferedInputStream(waveStream);
-    }
+	private boolean isPaused;
 
-	public void play() throws PlayWaveException {
+	private Clip audioClip;
+	private boolean fastForward = false;
+	private AudioFormat format = null;
+	String audioFilePath;
 
-	AudioInputStream audioInputStream = null;
-	try {
-	    audioInputStream = AudioSystem.getAudioInputStream(this.waveStream);
-	} catch (UnsupportedAudioFileException e1) {
-	    throw new PlayWaveException(e1);
-	} catch (IOException e1) {
-	    throw new PlayWaveException(e1);
+	/**
+	 * Load audio file before playing back
+	 * 
+	 * @param audioFilePath
+	 *            Path of the audio file.
+	 * @throws IOException
+	 * @throws UnsupportedAudioFileException
+	 * @throws LineUnavailableException
+	 */
+	public void load(String audioFilePath,int currFrame)
+			throws UnsupportedAudioFileException, IOException, LineUnavailableException {
+
+		this.audioFilePath = audioFilePath;
+		format = null;
+		AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File(audioFilePath));
+		format = audioStream.getFormat();
+		audioStream.skip(currFrame*4410);
+		DataLine.Info info = new DataLine.Info(Clip.class, format);
+
+		audioClip = null;
+		audioClip = (Clip) AudioSystem.getLine(info);
+
+		audioClip.addLineListener(this);
+		audioClip.open(audioStream);
 	}
 
-	// Obtain the information about the AudioInputStream
-	AudioFormat audioFormat = audioInputStream.getFormat();
-	Info info = new Info(SourceDataLine.class, audioFormat);
+//	public long getClipSecondLength() {
+//		return audioClip.getMicrosecondLength() / 1000000;
+//	}
 
-	// opens the audio channel
-	SourceDataLine dataLine = null;
-	try {
-	    dataLine = (SourceDataLine) AudioSystem.getLine(info);
-	    dataLine.open(audioFormat, this.EXTERNAL_BUFFER_SIZE);
-	} catch (LineUnavailableException e1) {
-	    throw new PlayWaveException(e1);
-	}
+//	public String getClipLengthString() {
+//		String length = "";
+//		long hour = 0;
+//		long minute = 0;
+//		long seconds = audioClip.getMicrosecondLength() / 1000000;
+//
+//		System.out.println(seconds);
+//
+//		if (seconds >= SECONDS_IN_HOUR) {
+//			hour = seconds / SECONDS_IN_HOUR;
+//			length = String.format("%02d:", hour);
+//		} else {
+//			length += "00:";
+//		}
+//
+//		minute = seconds - hour * SECONDS_IN_HOUR;
+//		if (minute >= SECONDS_IN_MINUTE) {
+//			minute = minute / SECONDS_IN_MINUTE;
+//			length += String.format("%02d:", minute);
+//
+//		} else {
+//			minute = 0;
+//			length += "00:";
+//		}
+//
+//		long second = seconds - hour * SECONDS_IN_HOUR - minute * SECONDS_IN_MINUTE;
+//
+//		length += String.format("%02d", second);
+//
+//		return length;
+//	}
 
-	// Starts the music :P
-	dataLine.start();
+	/**
+	 * Play a given audio file.
+	 * 
+	 * @throws IOException
+	 * @throws UnsupportedAudioFileException
+	 * @throws LineUnavailableException
+	 */
+	void play() throws IOException {
 
-	int readBytes = 0;
-	byte[] audioBuffer = new byte[this.EXTERNAL_BUFFER_SIZE];
+		audioClip.start();
 
-	try {
-	    while (readBytes != -1) {
-		readBytes = audioInputStream.read(audioBuffer, 0,
-			audioBuffer.length);
-		if (readBytes >= 0){
-		    dataLine.write(audioBuffer, 0, readBytes);
+		playCompleted = false;
+		isStopped = false;
+
+		while (!playCompleted) {
+			// wait for the playback completes
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException ex) {				 
+				if(fastForward){
+					audioClip.stop();
+					audioClip.setFramePosition(0);
+					this.frames = frames*4410;
+					audioClip.setFramePosition(frames);
+					fastForward = false;
+//					audioClip.start();
+				}
+				if (isStopped) {
+					audioClip.stop();
+					break;
+				}
+				if (isPaused) {
+					audioClip.stop();
+				}
+				else {
+					audioClip.start();
+				}
+			}
 		}
-	    }
-	} catch (IOException e1) {
-	    throw new PlayWaveException(e1);
-	} finally {
-	    // plays what's left and and closes the audioChannel
-	    dataLine.drain();
-	    dataLine.close();
+
+		audioClip.close();
+
 	}
 
-    }
+	/**
+	 * Stop playing back.
+	 */
+	public void stop() {
+		isStopped = true;
+	}
+
+	public void pause() {
+		isPaused = true;
+	}
+
+	public void resume() {
+		isPaused = false;
+	}
+	
+	public void jump(int frames){
+		fastForward = true;
+	}
+
+	/**
+	 * Listens to the audio line events to know when the playback completes.
+	 */
+	public void update(LineEvent event) {
+		LineEvent.Type type = event.getType();
+		if (type == LineEvent.Type.STOP) {
+			if (isStopped || !isPaused) {
+				playCompleted = true;
+			}
+		}
+	}
+
+//	public Clip getAudioClip() {
+//		return audioClip;
+//	}
+
+	public long getPosition() {
+		return audioClip.getFramePosition();
+	}
+	
+	public float getSampleRate() {
+		return format.getFrameRate();
+	}
+
+	
 }
