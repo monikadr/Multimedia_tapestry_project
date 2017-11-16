@@ -11,7 +11,8 @@ import java.util.*;
 import java.io.*;
 import javax.imageio.ImageIO;
 import java.awt.image.*;
-import java.awt.Graphics;
+import java.awt.*;
+import java.awt.Graphics2D;
 
 
 public class ImageCreation {
@@ -26,7 +27,7 @@ public class ImageCreation {
 	BufferedImage tapestry;
 	
 	public ImageCreation(String fileName, int threshold) throws IOException {
-	    System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+	    //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	    keyFrames = new KeyFrameIdentification(fileName,threshold);
 	    sceneIndex = new ArrayList<Integer>();
 	    sceneIndex = keyFrames.getSceneIndex();
@@ -46,6 +47,18 @@ public class ImageCreation {
 	    this.runSeamCarving();
 	    System.out.println("Stitching images together...");
 	    this.finalOutputImageAfterSeam();
+	}
+
+	public int getNewHeight() {
+		return this.newHeight;
+	}
+
+	public int getNewWidth() {
+		return this.newWidth;
+	}
+
+	public ArrayList<Integer> getSceneIndex() {
+		return this.sceneIndex;
 	}
 
 	public void runSeamCarving() throws IOException {
@@ -117,7 +130,16 @@ public class ImageCreation {
 			count++;
 		}
 
-	    ImageIO.write(tapestry,"png",new File("tapestry-seam.png"));
+		BufferedImage scaledImg = new BufferedImage(width/2,(this.newHeight*2-30)/2,BufferedImage.TYPE_INT_RGB);
+		Graphics2D gImg = scaledImg.createGraphics();
+
+		gImg.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		gImg.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		gImg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		gImg.drawImage(tapestry, 0, 0, width/2,(this.newHeight*2-30)/2, null);
+  		gImg.dispose();
+
+	    ImageIO.write(scaledImg,"png",new File("tapestry-seam.png"));
 	    //SeamCarver seamCarver = new SeamCarver("tapestry-seam.png","tapestry-seam-post.png",50,50);
 	}
 

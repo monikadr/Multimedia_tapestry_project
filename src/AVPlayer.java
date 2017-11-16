@@ -60,10 +60,17 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	
 	public static String audioFileName;
 	public static String videoFileName;
+	private static ArrayList<Integer> sceneIndex;
+	private static int newHeight;
+	private static int newWidth;
+
 	PlaySound playSound = new PlaySound();
 
-	public AVPlayer(String video, String audio, int[] byteIndicies,double f) {
-
+	public AVPlayer(String video, String audio, int[] byteIndicies,double f,int threshold) throws IOException {
+		ImageCreation imageCreation = new ImageCreation(video,threshold);
+		this.sceneIndex = imageCreation.getSceneIndex();
+		this.newHeight = imageCreation.getNewHeight();
+		this.newWidth = imageCreation.getNewWidth();
 		// initialization for variables
 		this.byteIndicies = byteIndicies;
 		this.Frames = f;
@@ -178,8 +185,88 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		buttonPanel.add(Box.createRigidArea(new Dimension(0, 50)));
 		sliderPanel.add(buttonPanel);
 
+		System.out.println("tapestry panel loading..");
 		// need to add tapestry panel 
-		
+		ImageIcon tap = new ImageIcon("tapestry-seam.png");
+		JLabel label = new JLabel("", tap, JLabel.CENTER);
+		JPanel tapestry = new JPanel(new BorderLayout());
+		tapestry.add( label, BorderLayout.CENTER );
+
+		tapestry.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseExited(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				JPanel slider = (JPanel) e.getSource();
+				fastForward = true;
+				System.out.println("x: " + e.getX() + " y: " + e.getY());
+				if (e.getY()*2 < (newHeight*2 - 30)/2) {
+					int index = ((e.getX()*2)/newWidth)*2;
+					System.out.println("index even " + index);
+					int keyFrameIndex = sceneIndex.get(index);
+					System.out.println("keyFrameIndex even: " + keyFrameIndex);
+					currFrame = keyFrameIndex/(352*288*3);
+				}
+				else {
+					int index = ((((e.getX()*2)-newWidth/4)/newWidth)*2)+1;
+					int keyFrameIndex = sceneIndex.get(index);
+					System.out.println("index odd " + index);
+					System.out.println("keyFrameIndex odd: " + keyFrameIndex);
+					currFrame = keyFrameIndex/(352*288*3);
+				}
+				//currFrame = (int) ((e.getX() * 1.85 * 9) + startFrame);
+
+				//slider.setValue(currFrame);
+				isAlreadyPlaying = false;
+			
+				videoThread.interrupt();
+				soundThread.interrupt();				
+				playSound.pause();
+				try {
+					videoThread.sleep(10);
+					soundThread.sleep(10);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				soundThread = null;
+//				soundThread = new Thread(new sound());
+				videoThread = null;
+//				videoThread = new Thread(new video());
+				playSound.jump(currFrame);
+				
+			
+				playback();
+				
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}			
+		});
+
+		sliderPanel.add(tapestry);
+
 		//adding whole panel to frame
 		frame.getContentPane().add(sliderPanel, BorderLayout.SOUTH);
 		frame.pack();

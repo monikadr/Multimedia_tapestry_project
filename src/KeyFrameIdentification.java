@@ -106,8 +106,8 @@ public class KeyFrameIdentification {
 					if (this.sceneIndex.size() != 0) {
 						int prevIndex = this.sceneIndex.get(this.sceneIndex.size()-1);
 						int currIndex = count*originalWidth*originalHeight*3;
-						double prevTime = (double)prevIndex/((double)originalHeight*(double)originalHeight*(double)3*(double)20*(double)60);
-						double currTime = (double)currIndex/((double)originalHeight*(double)originalHeight*(double)3*(double)20*(double)60);
+						double prevTime = (double)prevIndex/((double)originalWidth*(double)originalHeight*(double)3*(double)20*(double)60);
+						double currTime = (double)currIndex/((double)originalWidth*(double)originalHeight*(double)3*(double)20*(double)60);
 						if (currTime > prevTime + 0.2) {
 							this.sceneIndex.add(currIndex);
 							this.displayFrame(count, bytes);
@@ -201,8 +201,8 @@ public class KeyFrameIdentification {
 					if (this.sceneIndex.size() != 0) {
 						int prevIndex = this.sceneIndex.get(this.sceneIndex.size()-1);
 						int currIndex = count*originalWidth*originalHeight*3;
-						double prevTime = (double)prevIndex/((double)originalHeight*(double)originalHeight*(double)3*(double)20*(double)60);
-						double currTime = (double)currIndex/((double)originalHeight*(double)originalHeight*(double)3*(double)20*(double)60);
+						double prevTime = (double)prevIndex/((double)originalWidth*(double)originalHeight*(double)3*(double)20*(double)60);
+						double currTime = (double)currIndex/((double)originalWidth*(double)originalHeight*(double)3*(double)20*(double)60);
 						if (currTime > prevTime + 0.2) {
 							this.sceneIndex.add(currIndex);
 						}
