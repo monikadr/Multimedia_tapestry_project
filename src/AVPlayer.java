@@ -66,8 +66,8 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 	PlaySound playSound = new PlaySound();
 
-	public AVPlayer(String video, String audio, int[] byteIndicies,double f,int threshold) throws IOException {
-		ImageCreation imageCreation = new ImageCreation(video,threshold);
+	public AVPlayer(String video, String audio, int[] byteIndicies,double f,int threshold,String method) throws IOException {
+		ImageCreation imageCreation = new ImageCreation(video,threshold,method);
 		this.sceneIndex = imageCreation.getSceneIndex();
 		this.newHeight = imageCreation.getNewHeight();
 		this.newWidth = imageCreation.getNewWidth();
