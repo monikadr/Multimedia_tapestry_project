@@ -27,6 +27,7 @@ public class ImageCreation {
 	private static String name;
 	private static String method;
 	BufferedImage tapestry;
+	BufferedImage index;
 	
 	public ImageCreation(String fileName, int threshold, String method) throws IOException {
 	    System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -86,7 +87,7 @@ public class ImageCreation {
 		    while (count < this.sceneIndex.size()) {
 		    	String fileName = "foreground/fg" + count + ".png";
 		    	String outputFileName = "seamcarve/out" + count + ".png";
-		    	SeamCarver seamCarver = new SeamCarver(fileName,outputFileName,this.originalWidth - this.newWidth, this.originalHeight - this.newHeight);
+		    	SeamCarverIndividual seamCarver = new SeamCarverIndividual(fileName,outputFileName,this.originalWidth - this.newWidth, this.originalHeight - this.newHeight);
 		    	count++;
 		    }   	
 	    }
@@ -94,7 +95,7 @@ public class ImageCreation {
 		    while (count < this.sceneIndex.size()) {
 		    	String fileName = "keyframes/" + threshold + "_" + count + ".png";
 		    	String outputFileName = "seamcarve/out" + count + ".png";
-		    	SeamCarver seamCarver = new SeamCarver(fileName,outputFileName,this.originalWidth - this.newWidth, this.originalHeight - this.newHeight);
+		    	SeamCarverIndividual seamCarver = new SeamCarverIndividual(fileName,outputFileName,this.originalWidth - this.newWidth, this.originalHeight - this.newHeight);
 		    	count++;
 		    }	    	
 	    }
@@ -188,6 +189,7 @@ public class ImageCreation {
 		}
 
 	    tapestry = new BufferedImage(width, this.newHeight*2, BufferedImage.TYPE_INT_RGB);
+	    index = new BufferedImage(width, this.newHeight*2, BufferedImage.TYPE_INT_RGB);
 
 		while (count < maxSize) {
 			System.out.println("on keyframe number: " + count);
@@ -199,11 +201,11 @@ public class ImageCreation {
 					tapX = 0;
 				else 
 					tapX = (count/2)*this.newWidth;
-				//System.out.println("tapx: " + tapX + " tapy: " + tapY);
+	    		int pi = 0xff000000 | ((count & 0xff) << 16) | ((count & 0xff) << 8) | (count & 0xff);
 	    		for (int y = 0; y < this.newHeight; y++) {
 	    			for (int x = 0; x < this.newWidth; x++) {
-	    				//System.out.println("x " + x + " y " + y + " tapx " + tapX + " tapY " + tapY);
 	    				tapestry.setRGB(tapX,tapY,img.getRGB(x,y));
+	    				index.setRGB(tapX,tapY,pi);
 	    				tapX++;
 	    			}
 	    			tapX = (count/2)*this.newWidth;
@@ -219,11 +221,11 @@ public class ImageCreation {
 				else {
 					tapX = (count/2)*this.newWidth + (this.newWidth/2);
 				}
-				//System.out.println("tapx: " + tapX + " tapy: " + tapY);
+	    		int pi = 0xff000000 | ((count & 0xff) << 16) | ((count & 0xff) << 8) | (count & 0xff);
 	    		for (int y = 0; y < this.newHeight; y++) {
 	    			for (int x = 0; x < this.newWidth; x++) {
-	    				//System.out.println("x " + x + " y " + y + " tapx " + tapX + " tapY " + tapY);
 	    				tapestry.setRGB(tapX,tapY,img.getRGB(x,y));
+	    				index.setRGB(tapX,tapY,pi);
 	    				tapX++;
 	    			}
 	    			tapX = (count/2)*this.newWidth + (this.newWidth/2);
@@ -233,10 +235,11 @@ public class ImageCreation {
 			count++;
 		}
 
+	    ImageIO.write(index,"png",new File("index.png"));
 	    ImageIO.write(tapestry,"png",new File("tapestry.png"));
 	    System.out.println("Running seam carving..");
 	    int trial = (int) width/4 + 30;
-	    SeamCarver seamCarver = new SeamCarver("tapestry.png","tapestry-seam.png",trial,this.newHeight/4 + 10);
+	    SeamCarver seamCarver = new SeamCarver("tapestry.png","tapestry-seam.png",trial,this.newHeight/4 + 10,"index.png","index-out.png");
 	    BufferedImage tapseam = ImageIO.read(new File("tapestry-seam.png"));
 	    width = tapseam.getWidth();
 	    int height = tapseam.getHeight();
@@ -254,78 +257,6 @@ public class ImageCreation {
 	    ImageIO.write(scaledImg,"png",new File(outputFileNamee));
 	}
 
-	public void finalOutputImageSideBySide() throws IOException {
-	    int count = 0;
-	    int offset = 15*(this.sceneIndex.size()-1);
-	    int width = this.newWidth*this.sceneIndex.size() - offset;
-	    tapestry = new BufferedImage(width, this.newHeight, BufferedImage.TYPE_INT_RGB);
-    	int tapX = 0;
-
-	    while (count < this.sceneIndex.size()) {
-	    	if (count == 0) {
-	    		//System.out.println("count 0");
-		    	String outputFileName = "seamcarve/out" + count + ".png";
-		    	BufferedImage bi = ImageIO.read(new File(outputFileName));
-	    		for (int y = 0; y < this.newHeight; y++) {
-	    			for (int x = 0; x < this.newWidth; x++) {
-	    				tapestry.setRGB(x,y,bi.getRGB(x,y));
-	    			}
-	    		}	    		    		
-	    	}
-	    	else {
-		    	String outputFileName = "seamcarve/out" + count + ".png";
-	    		BufferedImage im = ImageIO.read(new File(outputFileName));
-	    		int imX = 0;
-	    		for (int y = 0; y < this.newHeight; y++) {
-	    			for (int x = tapX; x < tapX + this.newWidth; x++) {
-	    				if (x >= tapX && x < tapX + 15) {
-	    					int val1 = tapestry.getRGB(x,y);
-	    					int r1 = (val1 >> 16) & 0x000000FF;
-	    					int g1 = (val1 >> 8 ) & 0x000000FF;
-	    					int b1 = val1 & 0x000000FF;
-
-	    					int val2 = im.getRGB(imX,y);
-	    					int r2 = (val2 >> 16 ) & 0x000000FF;
-	    					int g2 = (val2 >> 8 ) & 0x000000FF;
-	    					int b2 = val2 & 0x000000FF;
-
-	    					int avgR = (r1+r2)/2;
-	    					int avgG = (g1+g2)/2;
-	    					int avgB = (b1+b2)/2;
-	    					int pix = 0xff000000 | ((avgR & 0xff) << 16) | ((avgG & 0xff) << 8) | (avgB & 0xff);
-	    					tapestry.setRGB(x,y,pix);
-	    				}
-	    				else {
-	    					tapestry.setRGB(x,y,im.getRGB(imX,y));
-	    				}
-	    				imX++;
-	    			}
-	    			imX = 0;
-	    		}
-	    	}
-
-	        tapX += this.newWidth - 15;
-	    	count++;
-	    }
-	    ImageIO.write(tapestry,"png",new File("tapestry.png"));
-	    System.out.println("Running seam carving..");
-	    int trial = (int) width/4 + 30;
-	    SeamCarver seamCarver = new SeamCarver("tapestry.png","tapestry-seam.png",trial,this.newHeight/4 + 10);
-	    BufferedImage tapseam = ImageIO.read(new File("tapestry-seam.png"));
-	    width = tapseam.getWidth();
-	    int height = tapseam.getHeight();
-
-		BufferedImage scaledImg = new BufferedImage(width/2,height/2,BufferedImage.TYPE_INT_RGB);
-		Graphics2D gImg = scaledImg.createGraphics();
-
-		gImg.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		gImg.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		gImg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		gImg.drawImage(tapseam, 0, 0, width/2,height/2, null);
-  		gImg.dispose();
-
-	    ImageIO.write(scaledImg,"png",new File("tapestry-seam-scaled.png"));
-	}
 
 	public void foreground() {
 		System.out.println("running foreground");

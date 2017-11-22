@@ -10,7 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-
+import javax.imageio.ImageIO;
+import java.awt.image.*;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -63,6 +64,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	private static ArrayList<Integer> sceneIndex;
 	private static int newHeight;
 	private static int newWidth;
+	private BufferedImage indexImage;
 
 	PlaySound playSound = new PlaySound();
 
@@ -76,7 +78,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		this.Frames = f;
 		this.audioFileName = audio;
 		this.videoFileName = video;
-
+		indexImage = ImageIO.read(new File("index-out.png"));
 		// setting slider, stop, pause, play buttons - UI build
 		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -217,19 +219,26 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				JPanel slider = (JPanel) e.getSource();
 				fastForward = true;
 				System.out.println("x: " + e.getX() + " y: " + e.getY());
-				if (e.getY()*2 < (newHeight*2 - 30)/2) {
-					int index = ((e.getX()*2)/newWidth)*2;
-					System.out.println("index even " + index);
-					int keyFrameIndex = sceneIndex.get(index);
-					System.out.println("keyFrameIndex even: " + keyFrameIndex);
-					currFrame = keyFrameIndex/(352*288*3);
-				}
-				else {
-					int index = ((((e.getX()*2)-newWidth/4)/newWidth)*2)+1;
-					int keyFrameIndex = sceneIndex.get(index);
-					System.out.println("index odd " + index);
-					System.out.println("keyFrameIndex odd: " + keyFrameIndex);
-					currFrame = keyFrameIndex/(352*288*3);
+				// if (e.getY()*2 < (newHeight*2 - 30)/2) {
+				// 	int index = ((e.getX()*2)/newWidth)*2;
+				// 	System.out.println("index even " + index);
+				// 	int keyFrameIndex = sceneIndex.get(index);
+				// 	System.out.println("keyFrameIndex even: " + keyFrameIndex);
+				// 	currFrame = keyFrameIndex/(352*288*3);
+				// }
+				// else {
+				// 	int index = ((((e.getX()*2)-newWidth/4)/newWidth)*2)+1;
+				// 	int keyFrameIndex = sceneIndex.get(index);
+				// 	System.out.println("index odd " + index);
+				// 	System.out.println("keyFrameIndex odd: " + keyFrameIndex);
+				// 	currFrame = keyFrameIndex/(352*288*3);
+				// }
+				int pix = indexImage.getRGB(e.getX(),e.getY());
+				int frameNum = (pix >> 16) & 0x000000FF;
+				int keyFrameIndex = sceneIndex.get(frameNum);
+				currFrame = keyFrameIndex/(352*288*3);
+				if (currFrame > 40) {
+					currFrame -= 40;
 				}
 				//currFrame = (int) ((e.getX() * 1.85 * 9) + startFrame);
 
