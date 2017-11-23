@@ -65,6 +65,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	private static int newHeight;
 	private static int newWidth;
 	private BufferedImage indexImage;
+	private String nameOfTapestry;
 
 	PlaySound playSound = new PlaySound();
 
@@ -78,7 +79,8 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		this.Frames = f;
 		this.audioFileName = audio;
 		this.videoFileName = video;
-		indexImage = ImageIO.read(new File("index-out.png"));
+		this.nameOfTapestry = imageCreation.getName();
+		indexImage = ImageIO.read(new File("index-out-scaled.png"));
 		// setting slider, stop, pause, play buttons - UI build
 		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -189,7 +191,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 		System.out.println("tapestry panel loading..");
 		// need to add tapestry panel 
-		ImageIcon tap = new ImageIcon("tapestry-seam.png");
+		ImageIcon tap = new ImageIcon(this.nameOfTapestry);
 		JLabel label = new JLabel("", tap, JLabel.CENTER);
 		JPanel tapestry = new JPanel(new BorderLayout());
 		tapestry.add( label, BorderLayout.CENTER );

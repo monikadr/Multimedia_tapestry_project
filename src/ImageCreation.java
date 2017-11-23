@@ -170,6 +170,7 @@ public class ImageCreation {
   		gImg.dispose();
 
 	    ImageIO.write(scaledImg,"png",new File("tapestry-seam.png"));
+
 	    //SeamCarver seamCarver = new SeamCarver("tapestry-seam.png","tapestry-seam-post.png",50,50);
 	}
 
@@ -255,8 +256,23 @@ public class ImageCreation {
 
   		String outputFileNamee = this.name + "_" + this.method + ".png";
 	    ImageIO.write(scaledImg,"png",new File(outputFileNamee));
+
+	    BufferedImage indexseam = ImageIO.read(new File("index-out.png"));
+		BufferedImage scaledImgIndx = new BufferedImage(width/2,height/2,BufferedImage.TYPE_INT_RGB);
+		Graphics2D gImgg = scaledImgIndx.createGraphics();
+
+		gImgg.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		gImgg.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		gImgg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		gImgg.drawImage(indexseam, 0, 0, width/2,height/2, null);
+  		gImgg.dispose();
+
+	    ImageIO.write(scaledImgIndx,"png",new File("index-out-scaled.png"));
 	}
 
+	public String getName() {
+		return this.name + "_" + this.method + ".png";
+	}
 
 	public void foreground() {
 		System.out.println("running foreground");
