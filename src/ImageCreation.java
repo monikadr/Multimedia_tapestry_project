@@ -256,7 +256,7 @@ public class ImageCreation {
 		gImg.drawImage(tapseam, 0, 0, width/2,height/2, null);
   		gImg.dispose();
 
-  		String outputFileNamee = this.name + "_" + this.method + ".png";
+  		String outputFileNamee = this.name + "_" + this.method +"_" + this.threshold + ".png";
 	    ImageIO.write(scaledImg,"png",new File(outputFileNamee));
 
 	    BufferedImage indexseam = ImageIO.read(new File(m));
@@ -273,7 +273,7 @@ public class ImageCreation {
 	}
 
 	public String getName() {
-		return this.name + "_" + this.method + ".png";
+		return this.name + "_" + this.method +"_" + this.threshold + ".png";
 	}
 
 	public void foreground() {

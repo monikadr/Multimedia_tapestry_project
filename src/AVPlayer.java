@@ -6,19 +6,9 @@ import java.awt.event.MouseMotionListener;
 import java.awt.image.*;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 import javax.imageio.ImageIO;
-import java.awt.image.*;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.sound.sampled.DataLine.Info;
 import javax.swing.*;
 
 
@@ -53,27 +43,23 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	// to keep track of playing frame number 
 	public static int startFrame, currFrame = 0;
 	// threads for audio and video 
-	public static Thread soundThread,videoThread;
+	public Thread soundThread,videoThread;
 	// to keep track if audio is already playing
 	public static boolean isAlreadyPlaying = false;
 	// to keep track if audio 
 	public boolean isPause = false;
 	
-	public static String audioFileName;
-	public static String videoFileName;
-	private static ArrayList<Integer> sceneIndex;
-	private static int newHeight;
-	private static int newWidth;
+	public String audioFileName;
+	public String videoFileName;
+	private ArrayList<Integer> sceneIndex;
 	private BufferedImage indexImage;
 	private String nameOfTapestry;
-
+	public MyButton playButton, stopButton, pauseButton;
 	PlaySound playSound = new PlaySound();
 
 	public AVPlayer(String video, String audio, int[] byteIndicies,double f,int threshold,String method) throws IOException {
 		ImageCreation imageCreation = new ImageCreation(video,threshold,method);
 		this.sceneIndex = imageCreation.getSceneIndex();
-		this.newHeight = imageCreation.getNewHeight();
-		this.newWidth = imageCreation.getNewWidth();
 		// initialization for variables
 		this.byteIndicies = byteIndicies;
 		this.Frames = f;
@@ -112,7 +98,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
 		slider.setAutoscrolls(true);
-		slider.setPreferredSize(new Dimension(width, 50));
+		slider.setMaximumSize(new Dimension(width, 50));
 		startFrame = currFrame;
 
 		sliderPanel.add(slider);
@@ -142,7 +128,6 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				JSlider slider = (JSlider) e.getSource();
 				fastForward = true;
 				currFrame = (int) ((e.getX() * 1.85 * 9) + startFrame);
-
 				slider.setValue(currFrame);
 				isAlreadyPlaying = false;
 			
@@ -157,9 +142,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 					e1.printStackTrace();
 				}
 				soundThread = null;
-//				soundThread = new Thread(new sound());
 				videoThread = null;
-//				videoThread = new Thread(new video());
 				playSound.jump(currFrame);
 				
 			
@@ -179,22 +162,24 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		// adding button after slider
 		buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-		MyButton playButton = new MyButton("Play");
+		playButton = new MyButton("Play");
 		buttonPanel.add(playButton);
 		buttonPanel.add(Box.createRigidArea(new Dimension(10, 0))); // Spacing
-		MyButton pauseButton = new MyButton("Pause");
+		pauseButton = new MyButton("Pause");
 		buttonPanel.add(pauseButton);
 		buttonPanel.add(Box.createRigidArea(new Dimension(10, 0))); // Spacing
-		MyButton stopButton = new MyButton("Stop");
+		stopButton = new MyButton("Stop");
 		buttonPanel.add(stopButton);
 		buttonPanel.add(Box.createRigidArea(new Dimension(0, 50)));
 		sliderPanel.add(buttonPanel);
+		pauseButton.setEnabled(false);
+		stopButton.setEnabled(false);
 
 		System.out.println("tapestry panel loading..");
 		// need to add tapestry panel 
 		ImageIcon tap = new ImageIcon(this.nameOfTapestry);
 		JLabel label = new JLabel("", tap, JLabel.CENTER);
-		JPanel tapestry = new JPanel(new BorderLayout());
+		tapestry = new JPanel(new BorderLayout());
 		tapestry.add( label, BorderLayout.CENTER );
 
 		tapestry.addMouseListener(new MouseListener() {
@@ -219,23 +204,8 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
-				JPanel slider = (JPanel) e.getSource();
 				fastForward = true;
 				System.out.println("x: " + e.getX() + " y: " + e.getY());
-				// if (e.getY()*2 < (newHeight*2 - 30)/2) {
-				// 	int index = ((e.getX()*2)/newWidth)*2;
-				// 	System.out.println("index even " + index);
-				// 	int keyFrameIndex = sceneIndex.get(index);
-				// 	System.out.println("keyFrameIndex even: " + keyFrameIndex);
-				// 	currFrame = keyFrameIndex/(352*288*3);
-				// }
-				// else {
-				// 	int index = ((((e.getX()*2)-newWidth/4)/newWidth)*2)+1;
-				// 	int keyFrameIndex = sceneIndex.get(index);
-				// 	System.out.println("index odd " + index);
-				// 	System.out.println("keyFrameIndex odd: " + keyFrameIndex);
-				// 	currFrame = keyFrameIndex/(352*288*3);
-				// }
 				int pix = indexImage.getRGB(e.getX(),e.getY());
 				int frameNum = (pix >> 16) & 0x000000FF;
 				int keyFrameIndex = sceneIndex.get(frameNum);
@@ -243,9 +213,6 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				if (currFrame > 40) {
 					currFrame -= 40;
 				}
-				//currFrame = (int) ((e.getX() * 1.85 * 9) + startFrame);
-
-				//slider.setValue(currFrame);
 				isAlreadyPlaying = false;
 			
 				videoThread.interrupt();
@@ -259,12 +226,9 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 					e1.printStackTrace();
 				}
 				soundThread = null;
-//				soundThread = new Thread(new sound());
 				videoThread = null;
-//				videoThread = new Thread(new video());
 				playSound.jump(currFrame);
-				
-			
+						
 				playback();
 				
 				
@@ -342,11 +306,17 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 	// playing video and audio based on the state or button press
 	public void buttonPressed(String name) {
-		if (name.equals("Play") && isAlreadyPlaying == false) { // Play			
+		if (name.equals("Play") && isAlreadyPlaying == false) { // Play		
+			playButton.setEnabled(false);
+			pauseButton.setEnabled(true);
+			stopButton.setEnabled(true);
 			isAlreadyPlaying = true;
 			state = 0;
 			playback();
 		} else if (name.equals("Play") && state == 1) { // resume
+			playButton.setEnabled(false);
+			pauseButton.setEnabled(true);
+			stopButton.setEnabled(true);
 			isAlreadyPlaying = true;
 			state = 0;
 			isPause = false;
@@ -354,12 +324,18 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 			videoThread.interrupt();
 			soundThread.interrupt();
 		} else if (name.equals("Pause")) { // Pause
+			playButton.setEnabled(true);
+			pauseButton.setEnabled(false);
+			stopButton.setEnabled(true);
 			state = 1;
 			isPause = true;
 			videoThread.interrupt();
 			soundThread.interrupt();
 			playSound.pause();
 		} else if (name.equals("Stop")) { // Stop
+			playButton.setEnabled(true);
+			pauseButton.setEnabled(false);
+			stopButton.setEnabled(false);
 			state = 2;
 			currFrame = 0;
 			isAlreadyPlaying = false;
