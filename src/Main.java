@@ -8,8 +8,8 @@ public class Main {
   	//ImageCreation image = new ImageCreation("resources/Michael_Day2_018.rgb",20000);
   	//ImageCreation image = new ImageCreation("resources/Apple.rgb",45000);
   	//ImageCreation image = new ImageCreation("resources/Disney.rgb",17500);
-  	int threshold = 20000;
-	String name = "resources/USCWeek.rgb";
+  	int threshold = 17500;
+	String name = "resources/Disney.rgb";
 	File file = new File(name);
 
 	//method can be background or people depending on the kind of person. People will run foreground analysis
@@ -25,6 +25,6 @@ public class Main {
 		byteIndicies[b] = b * nBytes;
 	}
 
-	new AVPlayer("resources/USCWeek.rgb","resources/USCWeek.wav",byteIndicies,nFrames,threshold,method);
+	new AVPlayer("resources/Disney.rgb","resources/Disney.wav",byteIndicies,nFrames,threshold,method);
   }
 }

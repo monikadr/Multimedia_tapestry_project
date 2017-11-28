@@ -80,7 +80,8 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		this.audioFileName = audio;
 		this.videoFileName = video;
 		this.nameOfTapestry = imageCreation.getName();
-		indexImage = ImageIO.read(new File("index-out-scaled.png"));
+		String t = "index_" + threshold + "_out_scaled.png";
+		indexImage = ImageIO.read(new File(t));
 		// setting slider, stop, pause, play buttons - UI build
 		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

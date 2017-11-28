@@ -235,12 +235,14 @@ public class ImageCreation {
 			}
 			count++;
 		}
-
-	    ImageIO.write(index,"png",new File("index.png"));
+		String n = "index_" + this.threshold + ".png";
+		String m = "index_" + this.threshold + "_out.png";
+		String o = "index_" + this.threshold + "_out_scaled.png";
+	    ImageIO.write(index,"png",new File(n));
 	    ImageIO.write(tapestry,"png",new File("tapestry.png"));
 	    System.out.println("Running seam carving..");
 	    int trial = (int) width/4 + 30;
-	    SeamCarver seamCarver = new SeamCarver("tapestry.png","tapestry-seam.png",trial,this.newHeight/4 + 10,"index.png","index-out.png");
+	    SeamCarver seamCarver = new SeamCarver("tapestry.png","tapestry-seam.png",trial,this.newHeight/4 + 10,n,m);
 	    BufferedImage tapseam = ImageIO.read(new File("tapestry-seam.png"));
 	    width = tapseam.getWidth();
 	    int height = tapseam.getHeight();
@@ -257,7 +259,7 @@ public class ImageCreation {
   		String outputFileNamee = this.name + "_" + this.method + ".png";
 	    ImageIO.write(scaledImg,"png",new File(outputFileNamee));
 
-	    BufferedImage indexseam = ImageIO.read(new File("index-out.png"));
+	    BufferedImage indexseam = ImageIO.read(new File(m));
 		BufferedImage scaledImgIndx = new BufferedImage(width/2,height/2,BufferedImage.TYPE_INT_RGB);
 		Graphics2D gImgg = scaledImgIndx.createGraphics();
 
@@ -267,7 +269,7 @@ public class ImageCreation {
 		gImgg.drawImage(indexseam, 0, 0, width/2,height/2, null);
   		gImgg.dispose();
 
-	    ImageIO.write(scaledImgIndx,"png",new File("index-out-scaled.png"));
+	    ImageIO.write(scaledImgIndx,"png",new File(o));
 	}
 
 	public String getName() {
