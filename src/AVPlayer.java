@@ -66,8 +66,8 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		this.sceneIndex = imageCreation.getSceneIndex();
 		
 		// change this threshold based on video
-		this.threshold_zoom1 = threshold-5000;
-		this.threshold_zoom2 = threshold-10000;
+		this.threshold_zoom1 = threshold-7000;
+		this.threshold_zoom2 = threshold-12000;
 		
 		//creating zoom images and getting scene index
 		ImageCreation imageCreation1 = new ImageCreation(video,this.threshold_zoom1,method);
@@ -82,6 +82,10 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		this.audioFileName = audio;
 		this.videoFileName = video;
 		this.nameOfTapestry = imageCreation.getName();
+
+		System.out.println("Running IndexMap..");
+		IndexMap indexMap = new IndexMap(threshold, threshold_zoom1, threshold_zoom2,sceneIndex,zoom1SceneIndex,zoom2SceneIndex);
+		
 		String t = "index_" + threshold + "_out_scaled.png";
 		indexImage = ImageIO.read(new File(t));
 
