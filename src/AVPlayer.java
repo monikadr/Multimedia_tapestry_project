@@ -3,6 +3,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.image.*;
 import java.io.*;
 import java.util.ArrayList;
@@ -48,18 +50,32 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	public static boolean isAlreadyPlaying = false;
 	// to keep track if audio 
 	public boolean isPause = false;
-	
+	public boolean zoom = false;
 	public String audioFileName;
 	public String videoFileName;
-	private ArrayList<Integer> sceneIndex;
-	private BufferedImage indexImage;
+	private ArrayList<Integer> sceneIndex,zoom1SceneIndex,zoom2SceneIndex;
+	private BufferedImage indexImage,zoom1IndexImage,zoom2IndexImage;
 	private String nameOfTapestry;
 	public MyButton playButton, stopButton, pauseButton;
 	PlaySound playSound = new PlaySound();
-
+	int threshold_zoom1, threshold_zoom2;
+	int zoom_count =0;
+	
 	public AVPlayer(String video, String audio, int[] byteIndicies,double f,int threshold,String method) throws IOException {
 		ImageCreation imageCreation = new ImageCreation(video,threshold,method);
 		this.sceneIndex = imageCreation.getSceneIndex();
+		
+		// change this threshold based on video
+		this.threshold_zoom1 = threshold-5000;
+		this.threshold_zoom2 = threshold-10000;
+		
+		//creating zoom images and getting scene index
+		ImageCreation imageCreation1 = new ImageCreation(video,this.threshold_zoom1,method);
+		this.zoom1SceneIndex = imageCreation1.getSceneIndex();
+		
+		ImageCreation imageCreation2 = new ImageCreation(video,this.threshold_zoom2,method);
+		this.zoom2SceneIndex = imageCreation2.getSceneIndex();
+		
 		// initialization for variables
 		this.byteIndicies = byteIndicies;
 		this.Frames = f;
@@ -68,6 +84,13 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		this.nameOfTapestry = imageCreation.getName();
 		String t = "index_" + threshold + "_out_scaled.png";
 		indexImage = ImageIO.read(new File(t));
+
+		// creating zoom index images
+		String t1 = "index_" + threshold_zoom1 + "_out_scaled.png";
+		zoom1IndexImage = ImageIO.read(new File(t1));
+		String t2 = "index_" + threshold_zoom2 + "_out_scaled.png";
+		zoom2IndexImage = ImageIO.read(new File(t2));
+		
 		// setting slider, stop, pause, play buttons - UI build
 		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -177,11 +200,79 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 		System.out.println("tapestry panel loading..");
 		// need to add tapestry panel 
-		ImageIcon tap = new ImageIcon(this.nameOfTapestry);
+		ImageIcon tap = new ImageIcon(this.nameOfTapestry+ "_" + method +"_" + threshold + ".png");
 		JLabel label = new JLabel("", tap, JLabel.CENTER);
 		tapestry = new JPanel(new BorderLayout());
 		tapestry.add( label, BorderLayout.CENTER );
+		
+		// to add scrolling
+		tapestry.addMouseWheelListener(new MouseWheelListener(){
 
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				// TODO Auto-generated method stub
+				//System.out.println(e.getWheelRotation());
+				//System.out.println(e.getX());
+				//System.out.println(e.getY());
+				
+				ImageIcon tap = null;
+				if(e.getWheelRotation()<0){
+					//zoom in - increase size
+					
+					if(zoom_count<0)
+					{
+						zoom_count=0;
+					}
+					zoom_count++;
+					zoom = true;
+					 tapestry.removeAll();
+					 if(zoom_count==1){
+						 
+						tap = new ImageIcon(nameOfTapestry+ "_" + method +"_" + threshold_zoom1 + ".png");
+						
+					 }
+					 else if(zoom_count>=2){
+						 tap = new ImageIcon(nameOfTapestry+ "_" + method +"_" +  threshold_zoom2 + ".png");
+					 }
+					
+					 
+						JLabel label = new JLabel("", tap, JLabel.CENTER);
+		
+						tapestry.add (label, BorderLayout.CENTER );
+						
+						tapestry.revalidate();
+						tapestry.repaint();
+						
+				}
+				else
+				{
+					// zoom out - decrease size
+					zoom_count--;
+					if(zoom_count>2){
+						zoom_count=2;
+					}
+					 tapestry.removeAll();
+					 zoom=false;
+					 if(zoom_count>=2){
+						tap = new ImageIcon(nameOfTapestry+ "_" + method +"_" +  threshold_zoom1 + ".png");
+						
+					 }
+					 else
+						 if(zoom_count<=1){
+							 tap = new ImageIcon(nameOfTapestry+ "_" + method +"_" + threshold + ".png");
+						 }
+						JLabel label = new JLabel("", tap, JLabel.CENTER);
+		
+						tapestry.add (label, BorderLayout.CENTER );
+						
+						tapestry.revalidate();
+						tapestry.repaint();
+				}
+				
+			}
+			
+		});
+		
 		tapestry.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
@@ -204,11 +295,19 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
-				fastForward = true;
+				int pix,frameNum,keyFrameIndex;
 				System.out.println("x: " + e.getX() + " y: " + e.getY());
-				int pix = indexImage.getRGB(e.getX(),e.getY());
-				int frameNum = (pix >> 16) & 0x000000FF;
-				int keyFrameIndex = sceneIndex.get(frameNum);
+				fastForward = true;
+				if(zoom){
+					pix = zoom1IndexImage.getRGB(e.getX(),e.getY());
+					frameNum = (pix >> 16) & 0x000000FF;
+					keyFrameIndex = sceneIndex.get(frameNum);
+				}
+				else{
+				pix = indexImage.getRGB(e.getX(),e.getY());
+				frameNum = (pix >> 16) & 0x000000FF;
+				keyFrameIndex = sceneIndex.get(frameNum);
+				}
 				currFrame = keyFrameIndex/(352*288*3);
 				if (currFrame > 40) {
 					currFrame -= 40;

@@ -273,7 +273,7 @@ public class ImageCreation {
 	}
 
 	public String getName() {
-		return this.name + "_" + this.method +"_" + this.threshold + ".png";
+		return this.name ;//+ "_" + this.method +"_" + this.threshold + ".png";
 	}
 
 	public void foreground() {
