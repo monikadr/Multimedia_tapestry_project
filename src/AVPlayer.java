@@ -68,7 +68,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	int start_x;
 	int end_x;
 
-	int original_tapestry_size = 615;
+	int original_tapestry_size;
 
 	public AVPlayer(String video, String audio, int[] byteIndicies, double f, int threshold, String method)
 			throws IOException {
@@ -83,8 +83,8 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		this.sceneIndex = imageCreation.getSceneIndex();
 		System.out.println("============================== tapestry1 done ========================= ");
 		// change this threshold based on video
-		this.threshold_zoom1 = threshold - 11000;
-		this.threshold_zoom2 = threshold - 17000;
+		this.threshold_zoom1 = threshold - 12000;
+		this.threshold_zoom2 = threshold - 18000;
 		this.method = method;
 
 		// creating zoom images and getting scene index
@@ -218,6 +218,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 		// need to add tapestry panel
 		ImageIcon tap = new ImageIcon(this.nameOfTapestry + "_" + method + "_" + threshold + ".png");
+		original_tapestry_size = tap.getIconWidth();
 		JLabel label = new JLabel("", tap, JLabel.CENTER);
 		tapestry = new JPanel(new BorderLayout());
 		tapestry.add(label, BorderLayout.CENTER);

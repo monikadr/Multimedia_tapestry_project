@@ -48,13 +48,13 @@ public class IndexMap {
 				if (!indexTable.containsKey(currFrame)) {
 					ArrayList<Integer> temp = new ArrayList<Integer>();
 					temp.add(x);
-					temp.add(y);
-					ArrayList<Integer> temp1 = new ArrayList<Integer>();
-					temp1.add(x);
-					temp1.add(y);
+//					temp.add(y);
+//					ArrayList<Integer> temp1 = new ArrayList<Integer>();
+//					temp1.add(x);
+//					temp1.add(y);
 					ArrayList<ArrayList<Integer>> addVal = new ArrayList<ArrayList<Integer>>();
-					addVal.add(temp1);
-					addVal.add(temp1);
+					addVal.add(temp);
+					addVal.add(temp);
 					addVal.add(temp);
 //					System.out.println(addVal.get(0) + "   ,   " + addVal.get(1) + "   ,   " + addVal.get(2));
 					indexTable.put(currFrame,addVal);
@@ -76,14 +76,14 @@ public class IndexMap {
 				if (!indexTable.containsKey(currFrame)) {
 					ArrayList<Integer> temp = new ArrayList<Integer>();
 					temp.add(x);
-					temp.add(y);
-					ArrayList<Integer> temp1 = new ArrayList<Integer>();
-					temp1.add(x);
-					temp1.add(y);
+//					temp.add(y);
+//					ArrayList<Integer> temp1 = new ArrayList<Integer>();
+//					temp1.add(x);
+//					temp1.add(y);
 					ArrayList<ArrayList<Integer>> addVal = new ArrayList<ArrayList<Integer>>();
-					addVal.add(temp1);
 					addVal.add(temp);
-					addVal.add(temp1);
+					addVal.add(temp);
+					addVal.add(temp);
 					indexTable.put(currFrame,addVal);
 				}
 				else {
@@ -91,7 +91,7 @@ public class IndexMap {
 					tempVal = indexTable.get(currFrame);
 //					if (tempVal.get(1).get(0) == -1 && tempVal.get(1).get(1) == -1) {
 						tempVal.get(1).set(0,x);
-						tempVal.get(1).set(1,y);
+//						tempVal.get(1).set(1,y);
 //					}
 				}
 
@@ -111,14 +111,14 @@ public class IndexMap {
 				if (!indexTable.containsKey(currFrame)) {
 					ArrayList<Integer> temp = new ArrayList<Integer>();
 					temp.add(x);
-					temp.add(y);
-					ArrayList<Integer> temp1 = new ArrayList<Integer>();
-					temp1.add(x);
-					temp1.add(y);
+//					temp.add(y);
+//					ArrayList<Integer> temp1 = new ArrayList<Integer>();
+//					temp1.add(x);
+//					temp1.add(y);
 					ArrayList<ArrayList<Integer>> addVal = new ArrayList<ArrayList<Integer>>();
 					addVal.add(temp);
-					addVal.add(temp1);
-					addVal.add(temp1);
+					addVal.add(temp);
+					addVal.add(temp);
 					indexTable.put(currFrame,addVal);
 				}
 				else {
@@ -126,7 +126,7 @@ public class IndexMap {
 					tempVal = indexTable.get(currFrame);
 //					if (tempVal.get(0).get(0) == -1 && tempVal.get(0).get(1) == -1) {
 						tempVal.get(0).set(0,x);
-						tempVal.get(0).set(0,y);
+//						tempVal.get(0).set(0,y);
 //					}
 				}
 			}
