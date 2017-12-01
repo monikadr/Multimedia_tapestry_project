@@ -81,7 +81,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 		ImageCreation imageCreation = new ImageCreation(video, threshold, method);
 		this.sceneIndex = imageCreation.getSceneIndex();
-		System.out.println("============================== tapestry1 done ========================= ");
+		System.out.println("======================= tapestry1 done =======================");
 		// change this threshold based on video
 		this.threshold_zoom1 = threshold - 12000;
 		this.threshold_zoom2 = threshold - 18000;
@@ -90,11 +90,11 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		// creating zoom images and getting scene index
 		 ImageCreation imageCreation1 = new ImageCreation(video,this.threshold_zoom1, method);
 		 this.zoom1SceneIndex = imageCreation1.getSceneIndex();
-		System.out.println("============================== tapestry2 done ========================= ");
+		System.out.println("======================= tapestry2 done =======================");
 		
 		 ImageCreation imageCreation2 = new ImageCreation(video,this.threshold_zoom2, method);
 		 this.zoom2SceneIndex = imageCreation2.getSceneIndex();
-		System.out.println("============================== tapestry3 done ========================= ");
+		System.out.println("======================= tapestry3 done =======================");
 
 		this.nameOfTapestry = imageCreation.getName();
 
@@ -116,7 +116,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		panel = new JPanel();
 
 		// load video file
-		System.out.println("============================== adding all components to player ========================= ");
+		System.out.println("======================= adding all components to player =======================");
 		try {
 			file = new File(video);
 			is = new FileInputStream(file);
@@ -464,7 +464,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 		sliderPanel.add(tapestry);
 
-		System.out.println("============================== loading video player ========================= ");
+		System.out.println("======================= loading video player =======================");
 		// adding whole panel to frame
 		frame.getContentPane().add(sliderPanel, BorderLayout.SOUTH);
 		frame.pack();

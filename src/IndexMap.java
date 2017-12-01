@@ -34,7 +34,7 @@ public class IndexMap {
 
 
 	public void run() {
-		System.out.println("================================= Creating hash table ============================");
+		System.out.println("======================= creating hashtable =======================");
 		int width  = indexImage3.getWidth();
 		int height = indexImage3.getHeight();
 
