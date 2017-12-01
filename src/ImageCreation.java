@@ -51,7 +51,7 @@ public class ImageCreation {
 	    if (method.equals("people")) {
 	    	this.newWidth = 240;
 	    	this.newHeight = 200;
-	    	System.out.println("Running foreground analysis..");
+//	    	System.out.println("Running foreground analysis..");
 		    this.foreground();
 	    	System.out.println("Running seam carving on individual images..");
 	    	this.runSeamCarving(1);
@@ -113,7 +113,7 @@ public class ImageCreation {
 		else
 			width = ((maxSize-1)/2+1)*this.newWidth + this.newWidth/4;
 
-		System.out.println("size "+ width +" x "+(this.newHeight*2-30));
+//		System.out.println("size "+ width +" x "+(this.newHeight*2-30));
 	    tapestry = new BufferedImage(width, this.newHeight*2-30, BufferedImage.TYPE_INT_RGB);
 
 		while (count < maxSize) {
@@ -193,7 +193,7 @@ public class ImageCreation {
 	    index = new BufferedImage(width, this.newHeight*2, BufferedImage.TYPE_INT_RGB);
 
 		while (count < maxSize) {
-			System.out.println("on keyframe number: " + count);
+//			System.out.println("on keyframe number: " + count);
 			String fileName = "seamcarve/out" + count + ".png";
 			BufferedImage img = ImageIO.read(new File(fileName));
 			if (count%2 == 0) {

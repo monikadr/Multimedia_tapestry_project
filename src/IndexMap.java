@@ -34,7 +34,7 @@ public class IndexMap {
 
 
 	public void run() {
-		System.out.println("Creating hash table..");
+		System.out.println("================================= Creating hash table ============================");
 		int width  = indexImage3.getWidth();
 		int height = indexImage3.getHeight();
 
@@ -50,19 +50,19 @@ public class IndexMap {
 					temp.add(x);
 					temp.add(y);
 					ArrayList<Integer> temp1 = new ArrayList<Integer>();
-					temp1.add(-1);
-					temp1.add(-1);
+					temp1.add(x);
+					temp1.add(y);
 					ArrayList<ArrayList<Integer>> addVal = new ArrayList<ArrayList<Integer>>();
 					addVal.add(temp1);
 					addVal.add(temp1);
 					addVal.add(temp);
-					System.out.println(addVal.get(0) + "   ,   " + addVal.get(1) + "   ,   " + addVal.get(2));
+//					System.out.println(addVal.get(0) + "   ,   " + addVal.get(1) + "   ,   " + addVal.get(2));
 					indexTable.put(currFrame,addVal);
 				}
 
 			}
 		}
-		System.out.println("Running on second image..");
+//		System.out.println("Running on second image..");
 		width = indexImage2.getWidth();
 		height = indexImage2.getHeight();
 
@@ -78,8 +78,8 @@ public class IndexMap {
 					temp.add(x);
 					temp.add(y);
 					ArrayList<Integer> temp1 = new ArrayList<Integer>();
-					temp1.add(-1);
-					temp1.add(-1);
+					temp1.add(x);
+					temp1.add(y);
 					ArrayList<ArrayList<Integer>> addVal = new ArrayList<ArrayList<Integer>>();
 					addVal.add(temp1);
 					addVal.add(temp);
@@ -89,15 +89,15 @@ public class IndexMap {
 				else {
 					ArrayList<ArrayList<Integer>> tempVal = new ArrayList<ArrayList<Integer>>();
 					tempVal = indexTable.get(currFrame);
-					if (tempVal.get(1).get(0) == -1 && tempVal.get(1).get(1) == -1) {
+//					if (tempVal.get(1).get(0) == -1 && tempVal.get(1).get(1) == -1) {
 						tempVal.get(1).set(0,x);
 						tempVal.get(1).set(1,y);
-					}
+//					}
 				}
 
 			}
 		}
-		System.out.println("Running on image one..");
+//		System.out.println("Running on image one..");
 		width = indexImage1.getWidth();
 		height = indexImage1.getHeight();
 
@@ -113,8 +113,8 @@ public class IndexMap {
 					temp.add(x);
 					temp.add(y);
 					ArrayList<Integer> temp1 = new ArrayList<Integer>();
-					temp1.add(-1);
-					temp1.add(-1);
+					temp1.add(x);
+					temp1.add(y);
 					ArrayList<ArrayList<Integer>> addVal = new ArrayList<ArrayList<Integer>>();
 					addVal.add(temp);
 					addVal.add(temp1);
@@ -124,10 +124,10 @@ public class IndexMap {
 				else {
 					ArrayList<ArrayList<Integer>> tempVal = new ArrayList<ArrayList<Integer>>();
 					tempVal = indexTable.get(currFrame);
-					if (tempVal.get(0).get(0) == -1 && tempVal.get(0).get(1) == -1) {
+//					if (tempVal.get(0).get(0) == -1 && tempVal.get(0).get(1) == -1) {
 						tempVal.get(0).set(0,x);
 						tempVal.get(0).set(0,y);
-					}
+//					}
 				}
 			}
 		}

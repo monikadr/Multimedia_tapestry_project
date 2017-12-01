@@ -8,11 +8,12 @@ import java.awt.event.MouseWheelListener;
 import java.awt.image.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Hashtable;
+
 import javax.imageio.ImageIO;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
-
 
 public class AVPlayer implements MouseListener, MouseMotionListener {
 
@@ -22,7 +23,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	int numRead = 0;
 	// variables to create UI
 	JFrame frame;
-	JPanel panel, sliderPanel,buttonPanel,tapestry;
+	JPanel panel, sliderPanel, buttonPanel, tapestry;
 	public static JSlider slider;
 	int width = 352;
 	int height = 288;
@@ -40,52 +41,66 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	// if doing fast forward like clicking on time slider
 	public static boolean fastForward = false;
 	public static byte[] bytes, sbytes;
-	// to keep track of video state = 0 -> playing, state=1 -> pause, state=2 -> stop
+	// to keep track of video state = 0 -> playing, state=1 -> pause, state=2 ->
+	// stop
 	public static int state;
-	// to keep track of playing frame number 
+	// to keep track of playing frame number
 	public static int startFrame, currFrame = 0;
-	// threads for audio and video 
-	public Thread soundThread,videoThread;
+	// threads for audio and video
+	public Thread soundThread, videoThread, zoomImageThread;
 	// to keep track if audio is already playing
 	public static boolean isAlreadyPlaying = false;
-	// to keep track if audio 
+	// to keep track if audio
 	public boolean isPause = false;
-	public boolean zoom = false;
+	// to store audio and video file name
 	public String audioFileName;
 	public String videoFileName;
-	private ArrayList<Integer> sceneIndex,zoom1SceneIndex,zoom2SceneIndex;
-	private BufferedImage indexImage,zoom1IndexImage,zoom2IndexImage;
 	private String nameOfTapestry;
 	public MyButton playButton, stopButton, pauseButton;
+	String method;
 	PlaySound playSound = new PlaySound();
+
+	// variables needed for zoom
+	private ArrayList<Integer> sceneIndex, zoom1SceneIndex, zoom2SceneIndex;
+	private BufferedImage indexImage, zoom1IndexImage, zoom2IndexImage;
 	int threshold_zoom1, threshold_zoom2;
-	int zoom_count =0;
-	
-	public AVPlayer(String video, String audio, int[] byteIndicies,double f,int threshold,String method) throws IOException {
-		ImageCreation imageCreation = new ImageCreation(video,threshold,method);
-		this.sceneIndex = imageCreation.getSceneIndex();
-		
-		// change this threshold based on video
-		this.threshold_zoom1 = threshold-7000;
-		this.threshold_zoom2 = threshold-12000;
-		
-		//creating zoom images and getting scene index
-		ImageCreation imageCreation1 = new ImageCreation(video,this.threshold_zoom1,method);
-		this.zoom1SceneIndex = imageCreation1.getSceneIndex();
-		
-		ImageCreation imageCreation2 = new ImageCreation(video,this.threshold_zoom2,method);
-		this.zoom2SceneIndex = imageCreation2.getSceneIndex();
-		
+	int zoom_count = 0;
+	int start_x;
+	int end_x;
+
+	int original_tapestry_size = 615;
+
+	public AVPlayer(String video, String audio, int[] byteIndicies, double f, int threshold, String method)
+			throws IOException {
+
 		// initialization for variables
 		this.byteIndicies = byteIndicies;
 		this.Frames = f;
 		this.audioFileName = audio;
 		this.videoFileName = video;
+
+		ImageCreation imageCreation = new ImageCreation(video, threshold, method);
+		this.sceneIndex = imageCreation.getSceneIndex();
+		System.out.println("============================== tapestry1 done ========================= ");
+		// change this threshold based on video
+		this.threshold_zoom1 = threshold - 11000;
+		this.threshold_zoom2 = threshold - 17000;
+		this.method = method;
+
+		// creating zoom images and getting scene index
+		 ImageCreation imageCreation1 = new ImageCreation(video,this.threshold_zoom1, method);
+		 this.zoom1SceneIndex = imageCreation1.getSceneIndex();
+		System.out.println("============================== tapestry2 done ========================= ");
+		
+		 ImageCreation imageCreation2 = new ImageCreation(video,this.threshold_zoom2, method);
+		 this.zoom2SceneIndex = imageCreation2.getSceneIndex();
+		System.out.println("============================== tapestry3 done ========================= ");
+
 		this.nameOfTapestry = imageCreation.getName();
 
-		System.out.println("Running IndexMap..");
-		IndexMap indexMap = new IndexMap(threshold, threshold_zoom1, threshold_zoom2,sceneIndex,zoom1SceneIndex,zoom2SceneIndex);
-		
+		IndexMap indexMap = new IndexMap(threshold, threshold_zoom1, threshold_zoom2, sceneIndex, zoom1SceneIndex,
+				zoom2SceneIndex);
+
 		String t = "index_" + threshold + "_out_scaled.png";
 		indexImage = ImageIO.read(new File(t));
 
@@ -94,22 +109,23 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		zoom1IndexImage = ImageIO.read(new File(t1));
 		String t2 = "index_" + threshold_zoom2 + "_out_scaled.png";
 		zoom2IndexImage = ImageIO.read(new File(t2));
-		
+
 		// setting slider, stop, pause, play buttons - UI build
 		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		panel = new JPanel();
-		
-		//load video file
+
+		// load video file
+		System.out.println("============================== adding all components to player ========================= ");
 		try {
 			file = new File(video);
-			is = new FileInputStream(file);			
+			is = new FileInputStream(file);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 		len = file.length();
 		bytes = new byte[(int) len];
-	
+
 		// get start image of the video and display
 		img = refreshFrame(0);
 		showImage(frame.getContentPane());
@@ -134,19 +150,19 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void mouseEntered(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void mouseExited(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
@@ -157,9 +173,9 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				currFrame = (int) ((e.getX() * 1.85 * 9) + startFrame);
 				slider.setValue(currFrame);
 				isAlreadyPlaying = false;
-			
+
 				videoThread.interrupt();
-				soundThread.interrupt();				
+				soundThread.interrupt();
 				playSound.stop();
 				try {
 					videoThread.sleep(10);
@@ -171,21 +187,19 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				soundThread = null;
 				videoThread = null;
 				playSound.jump(currFrame);
-				
-			
+
 				playback();
-				
-				
+
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-				
+
 			}
-		
+
 		});
-		
+
 		// adding button after slider
 		buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
@@ -202,124 +216,228 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		pauseButton.setEnabled(false);
 		stopButton.setEnabled(false);
 
-		System.out.println("tapestry panel loading..");
-		// need to add tapestry panel 
-		ImageIcon tap = new ImageIcon(this.nameOfTapestry+ "_" + method +"_" + threshold + ".png");
+		// need to add tapestry panel
+		ImageIcon tap = new ImageIcon(this.nameOfTapestry + "_" + method + "_" + threshold + ".png");
 		JLabel label = new JLabel("", tap, JLabel.CENTER);
 		tapestry = new JPanel(new BorderLayout());
-		tapestry.add( label, BorderLayout.CENTER );
-		
+		tapestry.add(label, BorderLayout.CENTER);
+
 		// to add scrolling
-		tapestry.addMouseWheelListener(new MouseWheelListener(){
+		tapestry.addMouseWheelListener(new MouseWheelListener() {
 
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				// TODO Auto-generated method stub
-				//System.out.println(e.getWheelRotation());
-				//System.out.println(e.getX());
-				//System.out.println(e.getY());
-				
+				// System.out.println(e.getWheelRotation());
+				// System.out.println(e.getX());
+				// System.out.println(e.getY());
+
 				ImageIcon tap = null;
-				if(e.getWheelRotation()<0){
-					//zoom in - increase size
-					
-					if(zoom_count<0)
-					{
-						zoom_count=0;
+				if (e.getWheelRotation() < 0) {
+					// zoom in - increase size
+
+					if (zoom_count < 0) {
+						zoom_count = 0;
 					}
 					zoom_count++;
-					zoom = true;
-					 tapestry.removeAll();
-					 if(zoom_count==1){
-						 
-						tap = new ImageIcon(nameOfTapestry+ "_" + method +"_" + threshold_zoom1 + ".png");
-						
-					 }
-					 else if(zoom_count>=2){
-						 tap = new ImageIcon(nameOfTapestry+ "_" + method +"_" +  threshold_zoom2 + ".png");
-					 }
-					
-					 
-						JLabel label = new JLabel("", tap, JLabel.CENTER);
-		
-						tapestry.add (label, BorderLayout.CENTER );
-						
-						tapestry.revalidate();
-						tapestry.repaint();
-						
-				}
-				else
-				{
-					// zoom out - decrease size
-					zoom_count--;
-					if(zoom_count>2){
+					// fetch key frame number and get x, y of that frame in new
+					// tapestry then crop image to that frame
+					Hashtable<Integer, ArrayList<ArrayList<Integer>>> xy = indexMap.getIndexTable();
+					tapestry.removeAll();
+					BufferedImage i = null;
+					if (zoom_count == 1) {
+						int pix = indexImage.getRGB(e.getX(), e.getY());
+						int frameNum = (pix >> 16) & 0x000000FF;
+						int keyFrameIndex = sceneIndex.get(frameNum);
+						int frame = keyFrameIndex / (352 * 288 * 3);
+
+						// find x,y of new tapestry
+						System.out.println("x point in new tapestry: " + xy.get(frame).get(1).get(0));
+
+						try {
+							i = ImageIO.read(new File(nameOfTapestry + "_" + method + "_" + threshold_zoom1 + ".png"));
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						int zoom_image_width = i.getWidth();
+						int middle = zoom_image_width - original_tapestry_size;
+
+						int T = 20;
+
+						if (xy.get(frame).get(1).get(0) - T < 0) {
+							start_x = 0;
+							end_x = original_tapestry_size;
+						} else if ((xy.get(frame).get(1).get(0) - T + original_tapestry_size) > zoom_image_width) {
+							start_x = zoom_image_width - original_tapestry_size;
+							end_x = zoom_image_width;
+						} else {
+							start_x = xy.get(frame).get(1).get(0) - T;
+							end_x = xy.get(frame).get(1).get(0) - T + original_tapestry_size;
+						}
+						System.out.println("x_start point : " + start_x);
+						System.out.println("x_endt point : " + end_x);
+
+						i = i.getSubimage(start_x, 0, (end_x - start_x), 170);
+						tap = new ImageIcon(i);
+						zoom_count=1;
+
+					} else if (zoom_count >= 2) {
+
+						int pix = zoom1IndexImage.getRGB(e.getX(), e.getY());
+						int frameNum = (pix >> 16) & 0x000000FF;
+						int keyFrameIndex = zoom1SceneIndex.get(frameNum);
+						int frame = keyFrameIndex / (352 * 288 * 3);
+
+						// find x,y of new tapestry
+						System.out.println("x point in new tapestry: " + xy.get(frame).get(2).get(0));
+
+						try {
+							i = ImageIO.read(new File(nameOfTapestry + "_" + method + "_" + threshold_zoom2 + ".png"));
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						int zoom_image_width = i.getWidth();
+						int middle = zoom_image_width - original_tapestry_size;
+
+						int T = 20;
+
+						if (xy.get(frame).get(2).get(0) - T < 0) {
+							start_x = 0;
+							end_x = original_tapestry_size;
+						} else if ((xy.get(frame).get(2).get(0) - T + original_tapestry_size) > zoom_image_width) {
+							start_x = zoom_image_width - original_tapestry_size;
+							end_x = zoom_image_width;
+						} else {
+							start_x = xy.get(frame).get(2).get(0) - T;
+							end_x = xy.get(frame).get(2).get(0) - T + original_tapestry_size;
+						}
+						System.out.println("x_start point : " + start_x);
+						System.out.println("x_endt point : " + end_x);
+
+						i = i.getSubimage(start_x, 0, (end_x - start_x), 170);
+						tap = new ImageIcon(i);
 						zoom_count=2;
+
 					}
-					 tapestry.removeAll();
-					 zoom=false;
-					 if(zoom_count>=2){
-						tap = new ImageIcon(nameOfTapestry+ "_" + method +"_" +  threshold_zoom1 + ".png");
-						
-					 }
-					 else
-						 if(zoom_count<=1){
-							 tap = new ImageIcon(nameOfTapestry+ "_" + method +"_" + threshold + ".png");
-						 }
-						JLabel label = new JLabel("", tap, JLabel.CENTER);
-		
-						tapestry.add (label, BorderLayout.CENTER );
-						
-						tapestry.revalidate();
-						tapestry.repaint();
+
+					JLabel label = new JLabel("", tap, JLabel.CENTER);
+
+					tapestry.add(label, BorderLayout.CENTER);
+
+					tapestry.revalidate();
+					tapestry.repaint();
+
+				} else {
+					// zoom out - decrease size
+					if (zoom_count > 2) {
+						zoom_count = 2;
+					}
+					Hashtable<Integer, ArrayList<ArrayList<Integer>>> xy = indexMap.getIndexTable();
+					tapestry.removeAll();
+					if (zoom_count >= 2) {
+						int pix = zoom2IndexImage.getRGB(e.getX(), e.getY());
+						int frameNum = (pix >> 16) & 0x000000FF;
+						int keyFrameIndex = zoom2SceneIndex.get(frameNum);
+						int frame = keyFrameIndex / (352 * 288 * 3);
+
+						// find x,y of new tapestry
+						System.out.println("x point in new tapestry: " + xy.get(frame).get(1).get(0));
+						BufferedImage i = null;
+						try {
+							i = ImageIO.read(new File(nameOfTapestry + "_" + method + "_" + threshold_zoom1 + ".png"));
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						int zoom_image_width = i.getWidth();
+						int middle = zoom_image_width - original_tapestry_size;
+
+						int T = 20;
+
+						if (xy.get(frame).get(1).get(0) - T < 0) {
+							start_x = 0;
+							end_x = original_tapestry_size;
+						} else if ((xy.get(frame).get(1).get(0) - T + original_tapestry_size) > zoom_image_width) {
+							start_x = zoom_image_width - original_tapestry_size;
+							end_x = zoom_image_width;
+						} else {
+							start_x = xy.get(frame).get(1).get(0) - T;
+							end_x = xy.get(frame).get(1).get(0) - T + original_tapestry_size;
+						}
+						System.out.println("x_start point : " + start_x);
+						System.out.println("x_endt point : " + end_x);
+
+						i = i.getSubimage(start_x, 0, (end_x - start_x), 170);
+						tap = new ImageIcon(i);
+						zoom_count = 1;
+
+					} else if (zoom_count <= 1) {
+						tap = new ImageIcon(nameOfTapestry + "_" + method + "_" + threshold + ".png");
+						zoom_count = 0;
+					}
+					JLabel label = new JLabel("", tap, JLabel.CENTER);
+
+					tapestry.add(label, BorderLayout.CENTER);
+
+					tapestry.revalidate();
+					tapestry.repaint();
 				}
-				
+
 			}
-			
+
 		});
-		
+
 		tapestry.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void mouseEntered(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void mouseExited(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
-				int pix,frameNum,keyFrameIndex;
+				int pix, frameNum, keyFrameIndex;
 				System.out.println("x: " + e.getX() + " y: " + e.getY());
 				fastForward = true;
-				if(zoom){
-					pix = zoom1IndexImage.getRGB(e.getX(),e.getY());
+				if (zoom_count == 0) {
+					pix = indexImage.getRGB(e.getX(), e.getY());
 					frameNum = (pix >> 16) & 0x000000FF;
 					keyFrameIndex = sceneIndex.get(frameNum);
+					currFrame = keyFrameIndex / (352 * 288 * 3);
+				} else if (zoom_count == 1) {
+					pix = zoom1IndexImage.getRGB(e.getX() + start_x, e.getY());
+					frameNum = (pix >> 16) & 0x000000FF;
+					keyFrameIndex = zoom1SceneIndex.get(frameNum);
+					currFrame = keyFrameIndex / (352 * 288 * 3);
+				} else if (zoom_count == 2) {
+					pix = zoom2IndexImage.getRGB(e.getX() + start_x, e.getY());
+					frameNum = (pix >> 16) & 0x000000FF;
+					keyFrameIndex = zoom2SceneIndex.get(frameNum);
+					currFrame = keyFrameIndex / (352 * 288 * 3);
 				}
-				else{
-				pix = indexImage.getRGB(e.getX(),e.getY());
-				frameNum = (pix >> 16) & 0x000000FF;
-				keyFrameIndex = sceneIndex.get(frameNum);
-				}
-				currFrame = keyFrameIndex/(352*288*3);
+
 				if (currFrame > 40) {
 					currFrame -= 40;
 				}
 				isAlreadyPlaying = false;
-			
+
 				videoThread.interrupt();
-				soundThread.interrupt();				
+				soundThread.interrupt();
 				playSound.pause();
 				try {
 					videoThread.sleep(10);
@@ -331,22 +449,22 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				soundThread = null;
 				videoThread = null;
 				playSound.jump(currFrame);
-						
+
 				playback();
-				
-				
+
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
 				// TODO Auto-generated method stub
-				
-			}			
+
+			}
 		});
 
 		sliderPanel.add(tapestry);
 
-		//adding whole panel to frame
+		System.out.println("============================== loading video player ========================= ");
+		// adding whole panel to frame
 		frame.getContentPane().add(sliderPanel, BorderLayout.SOUTH);
 		frame.pack();
 		frame.setVisible(true);
@@ -409,7 +527,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 	// playing video and audio based on the state or button press
 	public void buttonPressed(String name) {
-		if (name.equals("Play") && isAlreadyPlaying == false) { // Play		
+		if (name.equals("Play") && isAlreadyPlaying == false) { // Play
 			playButton.setEnabled(false);
 			pauseButton.setEnabled(true);
 			stopButton.setEnabled(true);
@@ -445,20 +563,20 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 			soundThread.interrupt();
 			videoThread.interrupt();
 			playSound.stop();
-		} 
+		}
 	}
-	
+
 	// start the video and audio when play button is clicked
-	public void playback(){
+	public void playback() {
 		try {
-			playSound.load(audioFileName,currFrame);
+			playSound.load(audioFileName, currFrame);
 		} catch (UnsupportedAudioFileException e1) {
 			e1.printStackTrace();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		} catch (LineUnavailableException e1) {
 			e1.printStackTrace();
-		}		
+		}
 		fastForward = false;
 		soundThread = null;
 		soundThread = new Thread(new sound());
@@ -467,32 +585,31 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		videoThread = new Thread(new video());
 		videoThread.start();
 	}
-	
+
 	// get new frame of video based on frame number
 	public BufferedImage refreshFrame(int frame_no) {
-		
-			ind = byteIndicies[frame_no];
-		
+
+		ind = byteIndicies[frame_no];
+
 		img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		try {
-			
-			while (offset < bytes.length && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+
+			while (offset < bytes.length && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
 				offset += numRead;
 			}
-			
-			for(int y = 0; y < height; y++){
-				for(int x = 0; x < width; x++){
+
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
 					byte r = bytes[ind];
-					byte g = bytes[ind+height*width];
-					byte b = bytes[ind+height*width*2]; 
+					byte g = bytes[ind + height * width];
+					byte b = bytes[ind + height * width * 2];
 
 					int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
-					img.setRGB(x,y,pix);
+					img.setRGB(x, y, pix);
 					ind++;
-				} 
+				}
 			}
-		} 
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return img;
@@ -526,7 +643,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		panel.repaint();
 		slider.setValue(currFrame);
 	}
-	
+
 	// start playing sound thread
 	public class sound implements Runnable {
 		public void run() {
@@ -538,38 +655,43 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 			}
 		}
 	}
-	
+
 	// start playing video thread
-	public class video implements Runnable{
-		public void run(){
+	public class video implements Runnable {
+		public void run() {
 			img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-			double spf = playSound.getSampleRate()/fps;
-			int j=0;
-			while((j < Math.round(playSound.getPosition())/spf) && fastForward == false){
+			double spf = playSound.getSampleRate() / fps;
+			int j = 0;
+			while ((j < Math.round(playSound.getPosition()) / spf) && fastForward == false) {
 				img = refreshFrame(currFrame);
 				videoOriginal(img);
 				j++;
 			}
-			while(j > Math.round(playSound.getPosition()/spf) &&  fastForward == false) {
-				// Do Nothing : this to slow down the video number of frames per sec
+			while (j > Math.round(playSound.getPosition() / spf) && fastForward == false) {
+				// Do Nothing : this to slow down the video number of frames per
+				// sec
 			}
 
-			for(int i = j; i < Frames&&  fastForward == false; i++) {
-				// Video ahead of audio, wait for audio to catch up
-				
-				while(i > Math.round(playSound.getPosition()/spf) &&  fastForward == false) {
-					// Do Nothing
+			for (int i = j; i < Frames && fastForward == false; i++) {
+				if (currFrame >= Frames) {
+					buttonPressed("Stop");
 				}
-				
-				while(i < Math.round(playSound.getPosition()/spf)&&  fastForward == false) {
+				// Video ahead of audio, wait for audio to catch up
+				else {
+					while (i > Math.round(playSound.getPosition() / spf) && fastForward == false) {
+						// Do Nothing
+					}
+
+					while (i < Math.round(playSound.getPosition() / spf) && fastForward == false) {
+						img = refreshFrame(currFrame);
+						videoOriginal(img);
+						i++;
+					}
+
 					img = refreshFrame(currFrame);
 					videoOriginal(img);
-					i++;
+					System.gc();
 				}
-				
-				img = refreshFrame(currFrame);
-				videoOriginal(img);
-				System.gc();
 			}
 		}
 	}
