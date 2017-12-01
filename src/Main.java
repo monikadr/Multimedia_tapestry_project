@@ -3,11 +3,11 @@ import java.io.*;
 
 public class Main {
   public static void main(String[] args) throws IOException {
-  	//ImageCreation image = new ImageCreation("resources/USCWeek.rgb",20000);
+  	//ImageCreation image = new ImageCreation("resources/USCWeek.rgb",20000,12000,18000);
   	//ImageCreation image = new ImageCreation("resources/Hussein_Day1_007.rgb",20000);
   	//ImageCreation image = new ImageCreation("resources/Michael_Day2_018.rgb",20000);
   	//ImageCreation image = new ImageCreation("resources/Apple.rgb",45000);
-  	//ImageCreation image = new ImageCreation("resources/Disney.rgb",17500);
+  	//ImageCreation image = new ImageCreation("resources/Disney.rgb",17500,10000,5500);
   	int threshold = 20000;
 	String name = "resources/USCWeek.rgb";
 	File file = new File(name);
