@@ -70,7 +70,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 	int original_tapestry_size;
 
-	public AVPlayer(String video, String audio, int[] byteIndicies, double f, int threshold, String method)
+	public AVPlayer(String video, String audio, int[] byteIndicies, double f, int threshold, int threshold2, int threshold3, String method)
 			throws IOException {
 
 		// initialization for variables
@@ -83,8 +83,8 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		this.sceneIndex = imageCreation.getSceneIndex();
 		System.out.println("======================= tapestry1 done =======================");
 		// change this threshold based on video
-		this.threshold_zoom1 = threshold - 12000;
-		this.threshold_zoom2 = threshold - 18000;
+		this.threshold_zoom1 = threshold2;
+		this.threshold_zoom2 = threshold3;
 		this.method = method;
 
 		// creating zoom images and getting scene index

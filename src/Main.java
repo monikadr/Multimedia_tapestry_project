@@ -3,17 +3,54 @@ import java.io.*;
 
 public class Main {
   public static void main(String[] args) throws IOException {
-  	//ImageCreation image = new ImageCreation("resources/USCWeek.rgb",20000,12000,18000);
-  	//ImageCreation image = new ImageCreation("resources/Hussein_Day1_007.rgb",20000);
-  	//ImageCreation image = new ImageCreation("resources/Michael_Day2_018.rgb",20000);
-  	//ImageCreation image = new ImageCreation("resources/Apple.rgb",45000);
-  	//ImageCreation image = new ImageCreation("resources/Disney.rgb",17500,10000,5500);
-  	int threshold = 20000;
-	String name = "resources/USCWeek.rgb";
+  	/**
+		To run for Hussein_Day1_007
+		1) set method to "background"
+		2) change AVPlayer to the following:
+		new AVPlayer("resources/Hussein_Day1_007.rgb","resources/Hussein_Day1_007.wav",byteIndicies,nFrames,22000,12500,8000,method);
+		22000: 10 scenes
+		12500: 19 scenes
+		8000: 23 scenes
+
+		To run for Apple
+		1) set method to "people"
+		2) change AVPlayer to the following:
+		new AVPlayer("resources/Apple.rgb","resources/Apple.wav",byteIndicies,nFrames,70000,20000,1000,method);
+		70000: 10 scenes
+		20000: 18 scenes
+		1000: 22 scenes
+
+		To run for USCWeek
+		1) set method to "people"
+		2) change AVPlayer to the following:
+		new AVPlayer("resources/USCWeek.rgb","resources/USCWeek.wav",byteIndicies,nFrames,20000,12000,18000,method);
+		65000: 10 scenes
+		12000: 17 scenes
+		5000: 23 scenes
+
+
+		To run for Disney
+		1) set method to "people"
+		2) change AVPlayer to the following:
+		new AVPlayer("resources/Disney.rgb","resources/Disney.wav",byteIndicies,nFrames,37000,5000,1000,method);
+		37000: 10 scenes
+		5000: 17 scenes
+		1000: 24 scenes
+
+		To run for Michael_Day2_018
+		1) set method to "background"
+		2) change AVPlayer to the following:
+		new AVPlayer("resources/Michael_Day2_018.rgb","resources/Michael_Day2_018.wav",byteIndicies,nFrames,22000,12500,3000,method);
+		22000: 9 scenes
+		12500: 18 scenes
+		3000: 23 scenes
+  	*/
+
+	String name = "resources/Disney.rgb";
 	File file = new File(name);
 
 	//method can be background or people depending on the kind of person. People will run foreground analysis
-  	String method = "people";
+  	String method = "background";
 	int width = 352;
 	int height = 288;
 	int nBytes = width*height*3;
@@ -25,6 +62,6 @@ public class Main {
 		byteIndicies[b] = b * nBytes;
 	}
 
-	new AVPlayer("resources/USCWeek.rgb","resources/USCWeek.wav",byteIndicies,nFrames,threshold,method);
+	new AVPlayer("resources/Disney.rgb","resources/Disney.wav",byteIndicies,nFrames,37000,5000,1000,method);
   }
 }
