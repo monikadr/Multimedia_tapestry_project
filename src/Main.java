@@ -23,7 +23,7 @@ public class Main {
 		To run for USCWeek
 		1) set method to "people"
 		2) change AVPlayer to the following:
-		new AVPlayer("resources/USCWeek.rgb","resources/USCWeek.wav",byteIndicies,nFrames,20000,12000,18000,method);
+		new AVPlayer("resources/USCWeek.rgb","resources/USCWeek.wav",byteIndicies,nFrames,65000,12000,5000,method);
 		65000: 10 scenes
 		12000: 17 scenes
 		5000: 23 scenes
@@ -46,11 +46,11 @@ public class Main {
 		3000: 23 scenes
   	*/
 
-	String name = "resources/Disney.rgb";
+	String name = "resources/USCWeek.rgb";
 	File file = new File(name);
 
 	//method can be background or people depending on the kind of person. People will run foreground analysis
-  	String method = "background";
+  	String method = "people";
 	int width = 352;
 	int height = 288;
 	int nBytes = width*height*3;
@@ -62,6 +62,6 @@ public class Main {
 		byteIndicies[b] = b * nBytes;
 	}
 
-	new AVPlayer("resources/Disney.rgb","resources/Disney.wav",byteIndicies,nFrames,37000,5000,1000,method);
+		new AVPlayer("resources/USCWeek.rgb","resources/USCWeek.wav",byteIndicies,nFrames,65000,12000,5000,method);
   }
 }
