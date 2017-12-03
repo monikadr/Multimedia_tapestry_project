@@ -68,7 +68,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	int start_x;
 	int end_x;
 
-	int original_tapestry_size;
+	int original_tapestry_size_width,original_tapestry_size_height;
 
 	public AVPlayer(String video, String audio, int[] byteIndicies, double f, int threshold, int threshold2, int threshold3, String method)
 			throws IOException {
@@ -218,7 +218,8 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 		// need to add tapestry panel
 		ImageIcon tap = new ImageIcon(this.nameOfTapestry + "_" + method + "_" + threshold + ".png");
-		original_tapestry_size = tap.getIconWidth();
+		original_tapestry_size_width = tap.getIconWidth();
+		original_tapestry_size_height = tap.getIconHeight();
 		JLabel label = new JLabel("", tap, JLabel.CENTER);
 		tapestry = new JPanel(new BorderLayout());
 		tapestry.add(label, BorderLayout.CENTER);
@@ -262,24 +263,24 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 							e1.printStackTrace();
 						}
 						int zoom_image_width = i.getWidth();
-						int middle = zoom_image_width - original_tapestry_size;
+						int middle = zoom_image_width - original_tapestry_size_width;
 
 						int T = 20;
 
 						if (xy.get(frame).get(1).get(0) - T < 0) {
 							start_x = 0;
-							end_x = original_tapestry_size;
-						} else if ((xy.get(frame).get(1).get(0) - T + original_tapestry_size) > zoom_image_width) {
-							start_x = zoom_image_width - original_tapestry_size;
+							end_x = original_tapestry_size_width;
+						} else if ((xy.get(frame).get(1).get(0) - T + original_tapestry_size_width) > zoom_image_width) {
+							start_x = zoom_image_width - original_tapestry_size_width;
 							end_x = zoom_image_width;
 						} else {
 							start_x = xy.get(frame).get(1).get(0) - T;
-							end_x = xy.get(frame).get(1).get(0) - T + original_tapestry_size;
+							end_x = xy.get(frame).get(1).get(0) - T + original_tapestry_size_width;
 						}
 						System.out.println("x_start point : " + start_x);
 						System.out.println("x_endt point : " + end_x);
 
-						i = i.getSubimage(start_x, 0, (end_x - start_x), 170);
+						i = i.getSubimage(start_x, 0, (end_x - start_x), original_tapestry_size_height);
 						tap = new ImageIcon(i);
 						zoom_count=1;
 
@@ -300,24 +301,24 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 							e1.printStackTrace();
 						}
 						int zoom_image_width = i.getWidth();
-						int middle = zoom_image_width - original_tapestry_size;
+						int middle = zoom_image_width - original_tapestry_size_width;
 
 						int T = 20;
 
 						if (xy.get(frame).get(2).get(0) - T < 0) {
 							start_x = 0;
-							end_x = original_tapestry_size;
-						} else if ((xy.get(frame).get(2).get(0) - T + original_tapestry_size) > zoom_image_width) {
-							start_x = zoom_image_width - original_tapestry_size;
+							end_x = original_tapestry_size_width;
+						} else if ((xy.get(frame).get(2).get(0) - T + original_tapestry_size_width) > zoom_image_width) {
+							start_x = zoom_image_width - original_tapestry_size_width;
 							end_x = zoom_image_width;
 						} else {
 							start_x = xy.get(frame).get(2).get(0) - T;
-							end_x = xy.get(frame).get(2).get(0) - T + original_tapestry_size;
+							end_x = xy.get(frame).get(2).get(0) - T + original_tapestry_size_width;
 						}
 						System.out.println("x_start point : " + start_x);
 						System.out.println("x_endt point : " + end_x);
 
-						i = i.getSubimage(start_x, 0, (end_x - start_x), 170);
+						i = i.getSubimage(start_x, 0, (end_x - start_x), original_tapestry_size_height);
 						tap = new ImageIcon(i);
 						zoom_count=2;
 
@@ -353,24 +354,24 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 							e1.printStackTrace();
 						}
 						int zoom_image_width = i.getWidth();
-						int middle = zoom_image_width - original_tapestry_size;
+						int middle = zoom_image_width - original_tapestry_size_width;
 
 						int T = 20;
 
 						if (xy.get(frame).get(1).get(0) - T < 0) {
 							start_x = 0;
-							end_x = original_tapestry_size;
-						} else if ((xy.get(frame).get(1).get(0) - T + original_tapestry_size) > zoom_image_width) {
-							start_x = zoom_image_width - original_tapestry_size;
+							end_x = original_tapestry_size_width;
+						} else if ((xy.get(frame).get(1).get(0) - T + original_tapestry_size_width) > zoom_image_width) {
+							start_x = zoom_image_width - original_tapestry_size_width;
 							end_x = zoom_image_width;
 						} else {
 							start_x = xy.get(frame).get(1).get(0) - T;
-							end_x = xy.get(frame).get(1).get(0) - T + original_tapestry_size;
+							end_x = xy.get(frame).get(1).get(0) - T + original_tapestry_size_width;
 						}
 						System.out.println("x_start point : " + start_x);
 						System.out.println("x_endt point : " + end_x);
 
-						i = i.getSubimage(start_x, 0, (end_x - start_x), 170);
+						i = i.getSubimage(start_x, 0, (end_x - start_x), original_tapestry_size_height);
 						tap = new ImageIcon(i);
 						zoom_count = 1;
 
