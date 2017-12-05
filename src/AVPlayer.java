@@ -265,7 +265,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 						int zoom_image_width = i.getWidth();
 						int middle = zoom_image_width - original_tapestry_size_width;
 
-						int T = 20;
+						int T = 5;
 
 						if (xy.get(frame).get(1).get(0) - T < 0) {
 							start_x = 0;

@@ -54,7 +54,9 @@ public class Main {
 		2000: 24 scenes
   	*/
 
-	String name = "resources/USCVillage.rgb";
+//	String name = "resources/USCVillage.rgb";
+
+	String name = "resources/Disney.rgb";
 	File file = new File(name);
 
 	//method can be background or people depending on the kind of person. People will run foreground analysis
@@ -70,6 +72,8 @@ public class Main {
 		byteIndicies[b] = b * nBytes;
 	}
 
-		new AVPlayer("resources/USCVillage.rgb","resources/USCVillage.wav",byteIndicies,nFrames,20000,10000,2000,method);
+//		new AVPlayer("resources/USCVillage.rgb","resources/USCVillage.wav",byteIndicies,nFrames,20000,10000,2000,method);
+	new AVPlayer("resources/Disney.rgb","resources/Disney.wav",byteIndicies,nFrames,37000,5000,1000,method);
+  
   }
 }
