@@ -677,11 +677,17 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 			for (int i = j; i < Frames && fastForward == false; i++) {
 				if (currFrame >= Frames) {
 					buttonPressed("Stop");
+					break;
+				}
+				else if(state==2){
+					break;
 				}
 				// Video ahead of audio, wait for audio to catch up
 				else {
 					while (i > Math.round(playSound.getPosition() / spf) && fastForward == false) {
 						// Do Nothing
+						if(state==2)
+							break;
 					}
 
 					while (i < Math.round(playSound.getPosition() / spf) && fastForward == false) {
