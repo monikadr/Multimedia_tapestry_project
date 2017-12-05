@@ -44,9 +44,17 @@ public class Main {
 		22000: 9 scenes
 		12500: 18 scenes
 		3000: 23 scenes
+		
+		To run for USCVillage
+		1) set method to "people"
+		2) change AVPlayer to the following:
+		new AVPlayer("resources/USCVillage.rgb","resources/USCVillage.wav",byteIndicies,nFrames,20000,10000,2000,method);
+		20000: 10 scenes
+		10000: 17 scenes
+		2000: 24 scenes
   	*/
 
-	String name = "resources/USCWeek.rgb";
+	String name = "resources/USCVillage.rgb";
 	File file = new File(name);
 
 	//method can be background or people depending on the kind of person. People will run foreground analysis
@@ -62,6 +70,6 @@ public class Main {
 		byteIndicies[b] = b * nBytes;
 	}
 
-		new AVPlayer("resources/USCWeek.rgb","resources/USCWeek.wav",byteIndicies,nFrames,65000,12000,5000,method);
+		new AVPlayer("resources/USCVillage.rgb","resources/USCVillage.wav",byteIndicies,nFrames,20000,10000,2000,method);
   }
 }
