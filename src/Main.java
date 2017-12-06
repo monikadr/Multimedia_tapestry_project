@@ -53,27 +53,43 @@ public class Main {
 		10000: 17 scenes
 		2000: 24 scenes
   	*/
+	int flag = 1;
 
-//	String name = "resources/USCVillage.rgb";
-
-	String name = "resources/Disney.rgb";
-	File file = new File(name);
-
-	//method can be background or people depending on the kind of person. People will run foreground analysis
-  	String method = "people";
-	int width = 352;
-	int height = 288;
-	int nBytes = width*height*3;
-	double len = file.length();
-	double nFrames = len/(width*height*3);
-	int[] byteIndicies = new int[(int) nFrames+1];
-	
-	for (int b = 0; b < nFrames; ++b) {
-		byteIndicies[b] = b * nBytes;
+	if (flag == 0) {
+		String name = "resources/Disney.rgb";
+		File file = new File(name);
+	  	String method = "people";
+		int width = 352;
+		int height = 288;
+		int nBytes = width*height*3;
+		double len = file.length();
+		double nFrames = len/(width*height*3);
+		int[] byteIndicies = new int[(int) nFrames+1];
+		
+		for (int b = 0; b < nFrames; ++b) {
+			byteIndicies[b] = b * nBytes;
+		}
+		new AVPlayer("resources/Disney.rgb","resources/Disney.wav",byteIndicies,nFrames,37000,5000,1000,method);
 	}
 
-//		new AVPlayer("resources/USCVillage.rgb","resources/USCVillage.wav",byteIndicies,nFrames,20000,10000,2000,method);
-	new AVPlayer("resources/Disney.rgb","resources/Disney.wav",byteIndicies,nFrames,37000,5000,1000,method);
+	else {
+		String name = "resources/USCVillage.rgb";
+		File file = new File(name);
+		//method can be background or people depending on the kind of person. People will run foreground analysis
+	  	String method = "people";
+		int width = 352;
+		int height = 288;
+		int nBytes = width*height*3;
+		double len = file.length();
+		double nFrames = len/(width*height*3);
+		int[] byteIndicies = new int[(int) nFrames+1];
+		
+		for (int b = 0; b < nFrames; ++b) {
+			byteIndicies[b] = b * nBytes;
+		}
+
+		new AVPlayer("resources/USCVillage.rgb","resources/USCVillage.wav",byteIndicies,nFrames,20000,10000,2000,method);
+	}
   
   }
 }
