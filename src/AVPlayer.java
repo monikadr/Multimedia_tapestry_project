@@ -59,6 +59,10 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 	public MyButton playButton, stopButton, pauseButton;
 	String method;
 	PlaySound playSound = new PlaySound();
+	boolean enabled = false;
+	boolean pbutton_enabled = false;
+	boolean sbutton_enabled = false;
+	boolean playbutton_enabled = true;
 
 	// variables needed for zoom
 	private ArrayList<Integer> sceneIndex, zoom1SceneIndex, zoom2SceneIndex;
@@ -142,6 +146,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		slider.setPaintLabels(true);
 		slider.setAutoscrolls(true);
 		slider.setMaximumSize(new Dimension(width, 50));
+		slider.setEnabled(enabled);
 		startFrame = currFrame;
 
 		sliderPanel.add(slider);
@@ -168,6 +173,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
+				if(enabled){
 				JSlider slider = (JSlider) e.getSource();
 				fastForward = true;
 				currFrame = (int) ((e.getX() * 1.85 * 9) + startFrame);
@@ -189,6 +195,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				playSound.jump(currFrame);
 
 				playback();
+				}
 
 			}
 
@@ -223,6 +230,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 		JLabel label = new JLabel("", tap, JLabel.CENTER);
 		tapestry = new JPanel(new BorderLayout());
 		tapestry.add(label, BorderLayout.CENTER);
+		tapestry.setEnabled(enabled);
 
 		// to add scrolling
 		tapestry.addMouseWheelListener(new MouseWheelListener() {
@@ -233,7 +241,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				// System.out.println(e.getWheelRotation());
 				// System.out.println(e.getX());
 				// System.out.println(e.getY());
-
+				if(enabled){
 				ImageIcon tap = null;
 				if (e.getWheelRotation() < 0) {
 					// zoom in - increase size
@@ -388,6 +396,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				}
 
 			}
+			}
 
 		});
 
@@ -413,6 +422,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
+				if(enabled){
 				int pix, frameNum, keyFrameIndex;
 				System.out.println("x: " + e.getX() + " y: " + e.getY());
 				fastForward = true;
@@ -455,7 +465,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 				playback();
 
 			}
-
+			}
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
 				// TODO Auto-generated method stub
@@ -529,36 +539,60 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 
 	// playing video and audio based on the state or button press
 	public void buttonPressed(String name) {
-		if (name.equals("Play") && isAlreadyPlaying == false) { // Play
+		if (name.equals("Play") && isAlreadyPlaying == false && playbutton_enabled == true) { // Play
 			playButton.setEnabled(false);
 			pauseButton.setEnabled(true);
 			stopButton.setEnabled(true);
+			playbutton_enabled = false;
+			enabled = true;
+			pbutton_enabled = true;
+			sbutton_enabled = true;
+			slider.setEnabled(enabled);
+			tapestry.setEnabled(enabled);
 			isAlreadyPlaying = true;
 			state = 0;
 			playback();
-		} else if (name.equals("Play") && state == 1) { // resume
+		} else if (name.equals("Play") && state == 1 && playbutton_enabled == true ) { // resume
 			playButton.setEnabled(false);
 			pauseButton.setEnabled(true);
 			stopButton.setEnabled(true);
+			pbutton_enabled = true;
+			sbutton_enabled = true;
+			playbutton_enabled = false;
+			enabled = true;
+			slider.setEnabled(enabled);
+			tapestry.setEnabled(enabled);
 			isAlreadyPlaying = true;
 			state = 0;
 			isPause = false;
 			playSound.resume();
 			videoThread.interrupt();
 			soundThread.interrupt();
-		} else if (name.equals("Pause")) { // Pause
+		} else if (name.equals("Pause") && pbutton_enabled == true) { // Pause
 			playButton.setEnabled(true);
 			pauseButton.setEnabled(false);
 			stopButton.setEnabled(true);
+			pbutton_enabled = false;
+			playbutton_enabled = true;
+			sbutton_enabled = true;
+			enabled = false;
+			slider.setEnabled(enabled);
+			tapestry.setEnabled(enabled);
 			state = 1;
 			isPause = true;
 			videoThread.interrupt();
 			soundThread.interrupt();
 			playSound.pause();
-		} else if (name.equals("Stop")) { // Stop
+		} else if (name.equals("Stop") && sbutton_enabled == true) { // Stop
 			playButton.setEnabled(true);
 			pauseButton.setEnabled(false);
 			stopButton.setEnabled(false);
+			pbutton_enabled = false;
+			playbutton_enabled = true;
+			sbutton_enabled = false;
+			enabled = false;
+			slider.setEnabled(enabled);
+			tapestry.setEnabled(enabled);
 			state = 2;
 			currFrame = 0;
 			isAlreadyPlaying = false;
@@ -679,7 +713,7 @@ public class AVPlayer implements MouseListener, MouseMotionListener {
 					buttonPressed("Stop");
 					break;
 				}
-				else if(state==2){
+				else if(state==2||state==1){
 					break;
 				}
 				// Video ahead of audio, wait for audio to catch up
